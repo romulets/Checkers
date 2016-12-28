@@ -1,22 +1,27 @@
 import Piece from './Piece'
 
-const INITIAL_PIECES_COUNT = 12
+const INITIAL__pieces_COUNT = 12
 
 export default class Player {
 
-  private pieces : Array<Piece>
+  public forward = false
+
+  private _pieces : Piece[]
 
   public constructor (pieceColor : string) {
     this.initPieces(pieceColor)
   }
 
   private initPieces (pieceColor : string) : void {
-    this.pieces = []
+    this._pieces = []
 
-    for (var i = 0; i < INITIAL_PIECES_COUNT; i++) {
-      this.pieces.push(new Piece(pieceColor))
+    for (var i = 0; i < INITIAL__pieces_COUNT; i++) {
+      this._pieces.push(new Piece(this, pieceColor))
     }
+  }
 
+  get pieces () :  Piece[] {
+    return this._pieces
   }
 
 }

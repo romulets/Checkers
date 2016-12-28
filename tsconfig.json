@@ -5,7 +5,8 @@
         "removeComments": true,
         "preserveConstEnums": true,
         "sourceMap": true,
-        "outFile": "./dist/scripts/checkers.js"
+        "outFile": "./dist/scripts/checkers.js",
+        "target": "ES5"
     },
     "exclude": [
         "node_modules"
