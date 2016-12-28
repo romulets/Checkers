@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+        "module": "AMD",
+        "noImplicitAny": false,
+        "removeComments": true,
+        "preserveConstEnums": true,
+        "sourceMap": true,
+        "outFile": "./dist/scripts/checkers.js"
+    },
+    "exclude": [
+        "node_modules"
+    ]
+}
