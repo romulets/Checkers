@@ -10,7 +10,7 @@ import Player from './Models/Player'
 export function startGame(elementSelector : string,
                           player1Color : string,
                           player2Color : string) {
-  var player1 = new Player(player1Color)
-  var player2 = new Player(player2Color)
-  var board = new Board(elementSelector, player1, player2)
+  let player1 = new Player(player1Color)
+  let player2 = new Player(player2Color)
+  let board = new Board(elementSelector, player1, player2)
 }

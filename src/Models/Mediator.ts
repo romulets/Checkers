@@ -1,6 +1,6 @@
 import Player from './Player'
 import Place from './Place'
-import Play from '../Actions/Play'
+import PlayAction from '../Actions/PlayAction'
 
 export default class Mediator {
 
@@ -30,21 +30,21 @@ export default class Mediator {
   /* Methods */
 
   public play (from : Place, to : Place, board : Place[][]) : boolean {
-    var play = new Play(from, to, board)
+    let play = new PlayAction(from, to, board)
     if (!this.canPlay(play)) return false
     return this.performPlay(play)
   }
 
-  private canPlay (play : Play) : boolean {
-    var { to, from } = play
+  private canPlay (play : PlayAction) : boolean {
+    let { to, from } = play
     return to.isEmpty() ||
             this.isCurrentPlayer(to.piece.player) ||
             play.isEatingAnEnemyPiece()
   }
 
-  private performPlay (play : Play) : boolean {
-    var isAdvancingPlace = play.isAdvancingPlace()
-    var isPlaySuccess = play.performPlay()
+  private performPlay (play : PlayAction) : boolean {
+    let isAdvancingPlace = play.isAdvancingPlace()
+    let isPlaySuccess = play.performPlay()
 
     if(isPlaySuccess && isAdvancingPlace) {
       this.alternateBetweenPlayers()
@@ -77,7 +77,7 @@ export default class Mediator {
   }
 
   private formatScoreElement () : void {
-    var littlePiece = this.getLittlePiceElement()
+    let littlePiece = this.getLittlePiceElement()
     this.socoreElement.innerHTML = 'É a vez do jogador '
     this.socoreElement.appendChild(littlePiece)
   }

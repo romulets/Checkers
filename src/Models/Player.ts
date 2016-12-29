@@ -27,7 +27,7 @@ export default class Player {
 
   private initPieces (piecesColor : string) : void {
     this._pieces = []
-    for (var i = 0; i < INITIAL_PIECES_COUNT; i++) {
+    for (let i = 0; i < INITIAL_PIECES_COUNT; i++) {
       this._pieces.push(new Piece(this, piecesColor))
     }
   }

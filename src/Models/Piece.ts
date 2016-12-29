@@ -2,17 +2,34 @@ import Player from './Player'
 
 export default class Piece {
 
-  public isQueen : boolean
+  public _isQueen : boolean
+  public inGame : boolean
   private span : HTMLElement
   private _player : Player
 
   constructor (player : Player, color : string) {
+    this.createDOMElement(color)
     this._player = player
     this.isQueen = false
-    this.createDOMElement(color)
+    this.inGame = true
   }
 
   /* Getters and Setters */
+
+  get isQueen () : boolean {
+    return  this._isQueen
+  }
+
+  set isQueen (isQueen : boolean) {
+    this._isQueen = isQueen
+
+    if (isQueen) {
+      this.element.classList.add('queen')
+    } else {
+      this.element.classList.remove('queen')
+    }
+
+  }
 
   get element () : HTMLElement {
     return this.span

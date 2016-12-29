@@ -1,6 +1,6 @@
 import Place from './Place'
 import Player from './Player'
-import Play from '../Actions/Play'
+import PlayAction from '../Actions/PlayAction'
 import Mediator from './Mediator'
 
 const BOARD_WIDTH = 8
@@ -10,10 +10,10 @@ export default class Board {
 
   private mediator : Mediator
   private table : HTMLElement
-  private boardMask: Place[][] = []
+  private boardMask: Place[][]
+  private selectedPlace : Place
   private player1 : Player
   private player2 : Player
-  private selectedPlace : Place = null
 
   public constructor (renderSelector : string, pl1 : Player, pl2 : Player) {
       this.setupMediator(pl1, pl2)
@@ -21,6 +21,8 @@ export default class Board {
       this.setupPlayers(pl1, pl2)
       this.renderHTML(renderSelector)
   }
+
+  /* Methods */
 
   private setupMediator(pl1 : Player, pl2 : Player) {
     this.mediator = new Mediator(pl1, pl2)
@@ -34,30 +36,31 @@ export default class Board {
   }
 
   private setupBoard () : void {
-    var x, y, playable, tr, place
-
-    this.createTable()
-
+    let x, y, playable, tr, place
     playable = false
+    this.boardMask = []
+    this.selectedPlace = null
+    this.createTableDOMElement()
+
     for (x = 0; x < BOARD_WIDTH; x++) {
       tr = document.createElement('tr')
       this.boardMask[x] = []
 
       for (y = 0; y < BOARD_HEIGHT; y++) {
         place = this.createPlace(x, y, playable)
-        tr.appendChild(place.element)
         playable = !playable
+        tr.appendChild(place.element)
       }
 
-      playable = !playable
       this.table.appendChild(tr)
+      playable = !playable
     }
   }
 
   private initPieces (player : Player) {
-    var initialLine = player.moveFoward ? 0 : 5
-    var place, x, y
-    var piecesInBoardCount = 0;
+    let place, x, y
+    let initialLine = player.moveFoward ? 0 : 5
+    let piecesInBoardCount = 0;
 
     for (x = initialLine; x < initialLine + 3; x++) {
       for (y = 0; y < BOARD_HEIGHT; y++) {
@@ -71,19 +74,17 @@ export default class Board {
   }
 
   private createPlace (x : number, y : number, playable : boolean) : Place {
-    var place = new Place(playable)
+    let place = new Place(playable)
     place.X = x
     place.Y = y
     this.boardMask[x][y] = place
-    place.element.addEventListener('click', this.handleClick.bind(this, place))
+    place.element.addEventListener('click', this.play.bind(this, place))
     return place
   }
 
-  private handleClick (place : Place) : void {
-    var playSuccessful = this.mediator
-                              .play(this.selectedPlace, place, this.boardMask)
-
-    if (!playSuccessful) return
+  private play (place : Place) : void {
+    let couldPlay = this.mediator.play(this.selectedPlace, place, this.boardMask)
+    if (!couldPlay) return
 
     if (place.selected) {
       this.selectedPlace = place
@@ -92,13 +93,13 @@ export default class Board {
     }
   }
 
-  private createTable () : void {
+  private createTableDOMElement () : void {
     this.table =  document.createElement('table')
     this.table.classList.add('checkers-board')
   }
 
   private renderHTML (renderSelector : string) : void {
-    var rootElement = document.querySelector(renderSelector)
+    let rootElement = document.querySelector(renderSelector)
     rootElement.appendChild(this.mediator.element)
     rootElement.appendChild(this.table)
   }

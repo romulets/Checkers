@@ -29,7 +29,7 @@ export default class Place {
   set selected (selected : boolean) {
     this._selected = selected
 
-    var classList = this.td.classList
+    let classList = this.td.classList
     if(selected) {
       classList.add('active')
     } else {
