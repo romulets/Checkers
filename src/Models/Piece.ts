@@ -2,8 +2,10 @@ import Player from './Player'
 
 export default class Piece {
 
-  public _isQueen : boolean
+  public X : number
+  public Y : number
   public inGame : boolean
+  private _isQueen : boolean
   private span : HTMLElement
   private _player : Player
 

@@ -2,9 +2,7 @@ import Place from './Place'
 import Player from './Player'
 import PlayAction from '../Actions/PlayAction'
 import Mediator from './Mediator'
-
-const BOARD_WIDTH = 8
-const BOARD_HEIGHT = 8
+import { BOARD_WIDTH, BOARD_HEIGHT } from '../consts'
 
 export default class Board {
 

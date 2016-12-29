@@ -2,8 +2,13 @@ import Place from '../Models/Place'
 import Piece from '../Models/Piece'
 import EatAction from './EatAction'
 import AdvanceAction from './AdvanceAction'
+import SelectAction from './SelectAction'
+import UnselectAction from './UnselectAction'
+import CrownAction from './CrownAction'
+import { Action } from './Action'
+import { isEatingAFriendPiece } from './Helpers'
 
-export default class PlayAction {
+export default class PlayAction implements Action {
 
   private _from : Place
   private _to : Place
@@ -31,87 +36,58 @@ export default class PlayAction {
 
   /* Methods */
 
-  public canPlay () : boolean {
+  public canPerform () : boolean {
     if (this.to === null) return false
-    else if (this.isSelectingPiece()) return true
-    else if (this.isUnselectingPiece()) return true
-    else if (this.isEatingAFriendPiece()) return false
-    else if (this.isAdvancingPlace()) return true
-    else return false
+    else if (isEatingAFriendPiece(this.from, this.to)) return false
+    else return true
   }
 
-  private isEating () : boolean {
-    return this.from !== null && this.to !== null &&
-            !this.from.isEmpty() && !this.to.isEmpty()
+
+  public perform () : boolean {
+    if (!this.canPerform()) return false
+    let perfomedSuccessfully = this.performActions()
+    this.performAfterActions()
+    return perfomedSuccessfully
   }
 
-  public isEatingAFriendPiece () : boolean {
-    return this.isEating() &&
-            this.from.piece.player === this.to.piece.player
-  }
+  private performActions () : boolean {
+    let action, i
+    let actions = this.getSequencedActionList()
 
-  public isEatingAnEnemyPiece () : boolean {
-    return this.isEating() &&
-            this.from.piece.player !== this.to.piece.player
-  }
-
-  public isUnselectingPiece () : boolean {
-    return this.from !== null && this.from.equalsTo(this.to)
-  }
-
-  public isSelectingPiece () : boolean {
-    return this.from === null && !this.to.isEmpty()
-  }
-
-  public isMoveToTopRight() : boolean {
-    let { from, to } = this
-    return from.X === to.X - 1 && from.Y === to.Y + 1
-  }
-
-  public isMoveToTopLeft() : boolean {
-    let { from, to } = this
-    return from.X === to.X - 1 && from.Y === to.Y - 1
-  }
-
-  public isMoveToBotRight() : boolean {
-    let { from, to } = this
-    return from.X === to.X + 1 && from.Y === to.Y + 1
-  }
-
-  public isMoveToBotLeft() : boolean {
-    let { from, to } = this
-    return from.X === to.X + 1 && from.Y === to.Y - 1
-  }
-
-  public isAdvancingPlace () : boolean {
-    let { from, to } = this
-
-    if (from === null || from.isEmpty()) return false
-    if (from.piece.isQueen) return true
-
-    if (from.piece.player.moveFoward) {
-      return this.isMoveToTopRight() || this.isMoveToTopLeft()
-    } else {
-        return this.isMoveToBotRight() || this.isMoveToBotLeft()
+    for (i = 0; i < actions.length; i++) {
+      action = actions[i]
+      if(action.canPerform()) return action.perform()
     }
-  }
-
-  public performPlay () : boolean {
-    if (!this.canPlay()) return false
-
-    if (this.isSelectingPiece()) {
-      this.to.selected = true
-      return true
-    } else if (this.isUnselectingPiece()) {
-      this.to.selected = false
-      return true
-    } else if (this.isEating()) {
-      return new EatAction(this).performEat()
-    } else if (this.isAdvancingPlace()) {
-      return new AdvanceAction(this).performAdvance()
-    }
-
     return false
+  }
+
+  private getSequencedActionList () : Action[] {
+    let { from, to, board } = this
+    return [
+      new SelectAction(from, to),
+      new UnselectAction(from, to),
+      new EatAction(from, to, board),
+      new AdvanceAction(from, to),
+    ]
+  }
+
+  private performAfterActions () : void {
+    let action, i
+    let actions = this.getAfterActionList()
+
+    for (i = 0; i < actions.length; i++) {
+      action = actions[i]
+      if(action.canPerform()) {
+        action.perform()
+      }
+    }
+  }
+
+  private getAfterActionList () : Action[] {
+    let { to } = this
+    return [
+      new CrownAction(to)
+    ]
   }
 
 }

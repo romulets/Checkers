@@ -1,6 +1,7 @@
 import Player from './Player'
 import Place from './Place'
 import PlayAction from '../Actions/PlayAction'
+import { isEatingAnEnemyPiece, isAdvancingPlace } from '../Actions/Helpers'
 
 export default class Mediator {
 
@@ -32,25 +33,26 @@ export default class Mediator {
   public play (from : Place, to : Place, board : Place[][]) : boolean {
     let play = new PlayAction(from, to, board)
     if (!this.canPlay(play)) return false
-    return this.performPlay(play)
+    return this.perform(play)
   }
 
   private canPlay (play : PlayAction) : boolean {
-    let { to, from } = play
+    let { from, to } = play
     return to.isEmpty() ||
             this.isCurrentPlayer(to.piece.player) ||
-            play.isEatingAnEnemyPiece()
+            isEatingAnEnemyPiece(from, to)
   }
 
-  private performPlay (play : PlayAction) : boolean {
-    let isAdvancingPlace = play.isAdvancingPlace()
-    let isPlaySuccess = play.performPlay()
+  private perform (play : PlayAction) : boolean {
+    let { from, to } = play
+    let advancingPlace = isAdvancingPlace(from, to)
+    let playSuccessful = play.perform()
 
-    if(isPlaySuccess && isAdvancingPlace) {
+    if(playSuccessful && advancingPlace) {
       this.alternateBetweenPlayers()
     }
 
-    return isPlaySuccess
+    return playSuccessful
   }
 
   public isCurrentPlayer (player : Player) {

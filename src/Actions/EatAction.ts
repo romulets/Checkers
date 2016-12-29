@@ -2,19 +2,30 @@ import PlayAction from './PlayAction'
 import Place from '../Models/Place'
 import InvalidPlayException from '../Exceptions/InvalidPlayException'
 import NonEmptyPlaceException from '../Exceptions/NonEmptyPlaceException'
+import { Action } from './Action'
+import {
+  isMoveToTopRight, isMoveToTopLeft, isMoveToBotRight, isEating
+} from './Helpers'
 
-export default class EatAction {
+export default class EatAction implements Action {
 
-  private play : PlayAction
+  private from : Place
+  private to : Place
+  private board : Place[][]
 
-  constructor (play : PlayAction) {
-    this.play = play
+  constructor (from : Place, to : Place, board : Place[][]) {
+    this.from = from
+    this.to = to
+    this.board = board
   }
 
   /* Methods */
 
-  public performEat() : boolean {
-    let { from, to } = this.play
+  public canPerform () : boolean  {
+    return isEating(this.from, this.to)
+  }
+
+  public perform () : boolean {
     let placeToEat
 
     try {
@@ -24,6 +35,11 @@ export default class EatAction {
       if (ex instanceof InvalidPlayException) return false
     }
 
+    return this.eat(placeToEat)
+  }
+
+  private eat(placeToEat : Place) : boolean {
+    let { from, to } = this
     let piece = from.piece
     let eatedPiece = to.piece
     eatedPiece.inGame = false
@@ -54,17 +70,17 @@ export default class EatAction {
   }
 
   private indentifyPlace () : Place {
-    let { play } = this
-    let { to } = play
+    let { from, to } = this
     let place
-    if (play.isMoveToTopRight()) {
-      place = play.board[to.X + 1][to.Y - 1]
-    } else if (play.isMoveToTopLeft()) {
-      place = play.board[to.X + 1][to.Y + 1]
-    } else if (play.isMoveToBotRight()) {
-      place = play.board[to.X - 1][to.Y - 1]
+
+    if (isMoveToTopRight(from, to)) {
+      place = this.board[to.X + 1][to.Y - 1]
+    } else if (isMoveToTopLeft(from, to)) {
+      place = this.board[to.X + 1][to.Y + 1]
+    } else if (isMoveToBotRight(from, to)) {
+      place = this.board[to.X - 1][to.Y - 1]
     } else {
-      place = play.board[to.X - 1][to.Y + 1]
+      place = this.board[to.X - 1][to.Y + 1]
     }
 
     return place

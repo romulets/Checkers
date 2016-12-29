@@ -45,6 +45,9 @@ export default class Place {
     if (piece !== null) {
       if (!this.playable)  throw new InvalidPlayException('Place not playable')
       if (!this.isEmpty()) throw new NonEmptyPlaceException(this)
+
+      piece.X = this.X
+      piece.Y = this.Y
     }
 
     this._piece = piece
