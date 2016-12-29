@@ -184,9 +184,10 @@ define("Models/Place", ["require", "exports", "Exceptions/NonEmptyPlaceException
 define("Actions/Play", ["require", "exports"], function (require, exports) {
     "use strict";
     var Play = (function () {
-        function Play(from, to) {
+        function Play(from, to, board) {
             this.from = from;
             this.to = to;
+            this.board = board;
         }
         Play.prototype.isEating = function () {
             return this.from !== null && this.to !== null &&
@@ -226,16 +227,28 @@ define("Actions/Play", ["require", "exports"], function (require, exports) {
                 return false;
             if (from.piece.isKing)
                 return true;
-            var isDiagonTopRight = from.X === to.X - 1 && from.Y === to.Y + 1;
-            var isDiagonTopLeft = from.X === to.X - 1 && from.Y === to.Y - 1;
-            var isDiagonBotRight = from.X === to.X + 1 && from.Y === to.Y + 1;
-            var isDiagonBotLeft = from.X === to.X + 1 && from.Y === to.Y - 1;
             if (from.piece.player.forward) {
-                return isDiagonTopRight || isDiagonTopLeft;
+                return this.isMoveToTopRight() || this.isMoveToTopLeft();
             }
             else {
-                return isDiagonBotRight || isDiagonBotLeft;
+                return this.isMoveToBotRight() || this.isMoveToBotLeft();
             }
+        };
+        Play.prototype.isMoveToTopRight = function () {
+            var _a = this, from = _a.from, to = _a.to;
+            return from.X === to.X - 1 && from.Y === to.Y + 1;
+        };
+        Play.prototype.isMoveToTopLeft = function () {
+            var _a = this, from = _a.from, to = _a.to;
+            return from.X === to.X - 1 && from.Y === to.Y - 1;
+        };
+        Play.prototype.isMoveToBotRight = function () {
+            var _a = this, from = _a.from, to = _a.to;
+            return from.X === to.X + 1 && from.Y === to.Y + 1;
+        };
+        Play.prototype.isMoveToBotLeft = function () {
+            var _a = this, from = _a.from, to = _a.to;
+            return from.X === to.X + 1 && from.Y === to.Y - 1;
         };
         Play.prototype.performPlay = function () {
             if (!this.canPlay())
@@ -247,7 +260,7 @@ define("Actions/Play", ["require", "exports"], function (require, exports) {
                 this.to.selected = false;
             }
             else if (this.isEating()) {
-                this.eat();
+                return this.eat();
             }
             else if (this.isAdvancingPlace()) {
                 this.advancePlace();
@@ -255,7 +268,33 @@ define("Actions/Play", ["require", "exports"], function (require, exports) {
             return true;
         };
         Play.prototype.eat = function () {
-            console.log('TO IMPLEMENT');
+            var _a = this, from = _a.from, to = _a.to;
+            var placeToEat = this.getPlaceToEat();
+            var piece = from.piece;
+            var eatedPiece = to.piece;
+            from.piece = null;
+            from.selected = false;
+            to.piece = null;
+            to.selected = false;
+            placeToEat.piece = piece;
+            return true;
+        };
+        Play.prototype.getPlaceToEat = function () {
+            var to = this.to;
+            var place;
+            if (this.isMoveToTopRight()) {
+                place = this.board[to.X + 1][to.Y - 1];
+            }
+            else if (this.isMoveToTopLeft()) {
+                place = this.board[to.X + 1][to.Y + 1];
+            }
+            else if (this.isMoveToBotRight) {
+                place = this.board[to.X - 1][to.Y - 1];
+            }
+            else {
+                place = this.board[to.X - 1][to.Y + 1];
+            }
+            return place;
         };
         Play.prototype.advancePlace = function () {
             var piece = this.from.piece;
@@ -317,8 +356,8 @@ define("Models/GameController", ["require", "exports", "Actions/Play"], function
             this.socoreElement.innerHTML = 'É a vez do jogador ';
             this.socoreElement.appendChild(littlePiece);
         };
-        GameController.prototype.play = function (from, to) {
-            var play = new Play_1.default(from, to);
+        GameController.prototype.play = function (from, to, board) {
+            var play = new Play_1.default(from, to, board);
             if (!to.isEmpty() && !this.isCurrentPlayer(to.piece.player) &&
                 !play.isEatingAnEnemyPiece()) {
                 return false;
@@ -396,7 +435,8 @@ define("Models/Board", ["require", "exports", "Models/Place", "Models/GameContro
             return place;
         };
         Board.prototype.handleClick = function (place) {
-            var playSuccessful = this.gameController.play(this.selectedPlace, place);
+            var playSuccessful = this.gameController
+                .play(this.selectedPlace, place, this.boardMask);
             if (!playSuccessful)
                 return;
             if (place.selected) {

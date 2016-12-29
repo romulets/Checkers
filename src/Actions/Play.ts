@@ -1,13 +1,16 @@
 import Place from '../Models/Place'
+import Piece from '../Models/Piece'
 
 export default class Play {
 
   private from : Place
   private to : Place
+  private board : Place[][]
 
-  constructor (from : Place, to : Place) {
+  constructor (from : Place, to : Place, board : Place[][]) {
       this.from = from
       this.to = to
+      this.board = board
   }
 
   private isEating () : boolean {
@@ -48,17 +51,31 @@ export default class Play {
     if (from === null || from.isEmpty()) return false
     if (from.piece.isKing) return true
 
-    var isDiagonTopRight =  from.X === to.X - 1 && from.Y === to.Y + 1
-    var isDiagonTopLeft =  from.X === to.X - 1 && from.Y === to.Y - 1
-    var isDiagonBotRight =  from.X === to.X + 1 && from.Y === to.Y + 1
-    var isDiagonBotLeft =  from.X === to.X + 1 && from.Y === to.Y - 1
-
     if (from.piece.player.forward) {
-      return isDiagonTopRight || isDiagonTopLeft
+      return this.isMoveToTopRight() || this.isMoveToTopLeft()
     } else {
-        return isDiagonBotRight || isDiagonBotLeft
+        return this.isMoveToBotRight() || this.isMoveToBotLeft()
     }
+  }
 
+  public isMoveToTopRight() : boolean {
+    var { from, to } = this
+    return from.X === to.X - 1 && from.Y === to.Y + 1
+  }
+
+  public isMoveToTopLeft() : boolean {
+    var { from, to } = this
+    return from.X === to.X - 1 && from.Y === to.Y - 1
+  }
+
+  public isMoveToBotRight() : boolean {
+    var { from, to } = this
+    return from.X === to.X + 1 && from.Y === to.Y + 1
+  }
+
+  public isMoveToBotLeft() : boolean {
+    var { from, to } = this
+    return from.X === to.X + 1 && from.Y === to.Y - 1
   }
 
   public performPlay () : boolean {
@@ -69,7 +86,7 @@ export default class Play {
     } else if (this.isUnselectingPiece()) {
       this.to.selected = false
     } else if (this.isEating()) {
-      this.eat()
+      return this.eat()
     } else if (this.isAdvancingPlace()) {
       this.advancePlace()
     }
@@ -77,8 +94,34 @@ export default class Play {
     return true
   }
 
-  private eat() : void {
-    console.log('TO IMPLEMENT')
+  private eat() : boolean {
+    var { from, to } = this
+    var placeToEat = this.getPlaceToEat()
+    var piece = from.piece
+    var eatedPiece = to.piece
+    from.piece = null
+    from.selected = false
+    to.piece = null
+    to.selected = false
+    placeToEat.piece = piece
+    return true
+  }
+
+  private getPlaceToEat() : Place {
+    var { to } = this
+    var place
+
+    if (this.isMoveToTopRight()) {
+      place = this.board[to.X + 1][to.Y - 1]
+    } else if (this.isMoveToTopLeft()) {
+      place = this.board[to.X + 1][to.Y + 1]
+    } else if (this.isMoveToBotRight) {
+      place = this.board[to.X - 1][to.Y - 1]
+    } else {
+      place = this.board[to.X - 1][to.Y + 1]
+    }
+
+    return place
   }
 
   private advancePlace() : void {

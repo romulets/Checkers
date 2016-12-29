@@ -54,8 +54,9 @@ export default class GameController {
     this.socoreElement.appendChild(littlePiece)
   }
 
-  public play (from : Place, to : Place) : boolean {
-    var play = new Play(from, to)
+  public play (from : Place, to : Place, board : Place[][]) : boolean {
+    var play = new Play(from, to, board)
+    
     if (!to.isEmpty() && !this.isCurrentPlayer(to.piece.player) &&
         !play.isEatingAnEnemyPiece()) {
       return false

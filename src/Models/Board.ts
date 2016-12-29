@@ -80,7 +80,8 @@ export default class Board {
   }
 
   private handleClick (place : Place) : void {
-    var playSuccessful = this.gameController.play(this.selectedPlace, place)
+    var playSuccessful = this.gameController
+                              .play(this.selectedPlace, place, this.boardMask)
 
     if (!playSuccessful) return
 
