@@ -19,7 +19,7 @@ export default class Place {
     this.playable = playable
 
     this.td = document.createElement('td')
-    this.td.style.backgroundColor = this.playable ? LIGHT_PLACE : DARK_PLACE
+    this.td.style.backgroundColor = this.playable ? DARK_PLACE : LIGHT_PLACE 
   }
 
   get selected () : boolean {
@@ -70,7 +70,7 @@ export default class Place {
 
   public equalsTo(place : Place) : boolean {
     if (place === null) return false
-    
+
     return this.X ===  place.X &&
             this.Y ===  place.Y
   }

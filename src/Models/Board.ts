@@ -1,12 +1,14 @@
 import Place from './Place'
 import Player from './Player'
-import Play from './Play'
+import Play from '../Actions/Play'
+import GameController from './GameController'
 
 const BOARD_WIDTH = 8
 const BOARD_HEIGHT = 8
 
 export default class Board {
 
+  private gameController : GameController
   private table : HTMLElement
   private boardMask: Place[][] = []
   private player1 : Player
@@ -14,9 +16,14 @@ export default class Board {
   private selectedPlace : Place = null
 
   public constructor (renderSelector : string, pl1 : Player, pl2 : Player) {
+      this.setupGameController(pl1, pl2)
       this.setupBoard()
       this.setupPlayers(pl1, pl2)
       this.renderHTML(renderSelector)
+  }
+
+  private setupGameController(pl1 : Player, pl2 : Player) {
+    this.gameController = new GameController(pl1, pl2)
   }
 
   private setupPlayers (pl1 : Player, pl2 : Player) : void {
@@ -73,26 +80,14 @@ export default class Board {
   }
 
   private handleClick (place : Place) : void {
-    var play = new Play(this.selectedPlace, place)
+    var playSuccessful = this.gameController.play(this.selectedPlace, place)
 
-    if (!play.canPlay()) return;
-
-    if (play.isSelectingPiece()) {
-      place.selected = true
-    } else if (play.isUnselectingPiece()) {
-      place.selected = false
-    } else if (play.isMovingCorrectly()) {
-      place.selected = false
-      this.selectedPlace.selected = false
-      var piece = this.selectedPlace.piece
-      this.selectedPlace.piece = null
-      place.piece = piece
-    }
+    if (!playSuccessful) return
 
     if (place.selected) {
       this.selectedPlace = place
     } else {
-        this.selectedPlace = null
+      this.selectedPlace = null
     }
   }
 
@@ -102,7 +97,9 @@ export default class Board {
   }
 
   private renderHTML (renderSelector : string) : void {
-    document.querySelector(renderSelector).appendChild(this.table)
+    var rootElement = document.querySelector(renderSelector)
+    rootElement.appendChild(this.gameController.element)
+    rootElement.appendChild(this.table)
   }
 
 }

@@ -9,6 +9,7 @@ define("Models/Player", ["require", "exports", "Models/Piece"], function (requir
     var Player = (function () {
         function Player(pieceColor) {
             this.forward = false;
+            this._color = pieceColor;
             this.initPieces(pieceColor);
         }
         Player.prototype.initPieces = function (pieceColor) {
@@ -20,6 +21,13 @@ define("Models/Player", ["require", "exports", "Models/Piece"], function (requir
         Object.defineProperty(Player.prototype, "pieces", {
             get: function () {
                 return this._pieces;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Player.prototype, "color", {
+            get: function () {
+                return this._color;
             },
             enumerable: true,
             configurable: true
@@ -107,7 +115,7 @@ define("Models/Place", ["require", "exports", "Exceptions/NonEmptyPlaceException
             this._selected = false;
             this.playable = playable;
             this.td = document.createElement('td');
-            this.td.style.backgroundColor = this.playable ? LIGHT_PLACE : DARK_PLACE;
+            this.td.style.backgroundColor = this.playable ? DARK_PLACE : LIGHT_PLACE;
         }
         Object.defineProperty(Place.prototype, "selected", {
             get: function () {
@@ -173,13 +181,25 @@ define("Models/Place", ["require", "exports", "Exceptions/NonEmptyPlaceException
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Place;
 });
-define("Models/Play", ["require", "exports"], function (require, exports) {
+define("Actions/Play", ["require", "exports"], function (require, exports) {
     "use strict";
     var Play = (function () {
         function Play(from, to) {
             this.from = from;
             this.to = to;
         }
+        Play.prototype.isEating = function () {
+            return this.from !== null && this.to !== null &&
+                !this.from.isEmpty() && !this.to.isEmpty();
+        };
+        Play.prototype.isEatingAFriendPiece = function () {
+            return this.isEating() &&
+                this.from.piece.player === this.to.piece.player;
+        };
+        Play.prototype.isEatingAnEnemyPiece = function () {
+            return this.isEating() &&
+                this.from.piece.player !== this.to.piece.player;
+        };
         Play.prototype.canPlay = function () {
             if (this.to === null)
                 return false;
@@ -187,7 +207,9 @@ define("Models/Play", ["require", "exports"], function (require, exports) {
                 return true;
             else if (this.isUnselectingPiece())
                 return true;
-            else if (this.isMovingCorrectly())
+            else if (this.isEatingAFriendPiece())
+                return false;
+            else if (this.isAdvancingPlace())
                 return true;
             else
                 return false;
@@ -198,20 +220,16 @@ define("Models/Play", ["require", "exports"], function (require, exports) {
         Play.prototype.isSelectingPiece = function () {
             return this.from === null && !this.to.isEmpty();
         };
-        Play.prototype.isMovingCorrectly = function () {
+        Play.prototype.isAdvancingPlace = function () {
             var _a = this, from = _a.from, to = _a.to;
             if (from === null || from.isEmpty())
                 return false;
             if (from.piece.isKing)
                 return true;
-            var isDiagonTopRight = from.X === to.X - 1 &&
-                from.Y === to.Y + 1;
-            var isDiagonTopLeft = from.X === to.X - 1 &&
-                from.Y === to.Y - 1;
-            var isDiagonBotRight = from.X === to.X + 1 &&
-                from.Y === to.Y + 1;
-            var isDiagonBotLeft = from.X === to.X + 1 &&
-                from.Y === to.Y - 1;
+            var isDiagonTopRight = from.X === to.X - 1 && from.Y === to.Y + 1;
+            var isDiagonTopLeft = from.X === to.X - 1 && from.Y === to.Y - 1;
+            var isDiagonBotRight = from.X === to.X + 1 && from.Y === to.Y + 1;
+            var isDiagonBotLeft = from.X === to.X + 1 && from.Y === to.Y - 1;
             if (from.piece.player.forward) {
                 return isDiagonTopRight || isDiagonTopLeft;
             }
@@ -219,12 +237,105 @@ define("Models/Play", ["require", "exports"], function (require, exports) {
                 return isDiagonBotRight || isDiagonBotLeft;
             }
         };
+        Play.prototype.performPlay = function () {
+            if (!this.canPlay())
+                return false;
+            if (this.isSelectingPiece()) {
+                this.to.selected = true;
+            }
+            else if (this.isUnselectingPiece()) {
+                this.to.selected = false;
+            }
+            else if (this.isEating()) {
+                this.eat();
+            }
+            else if (this.isAdvancingPlace()) {
+                this.advancePlace();
+            }
+            return true;
+        };
+        Play.prototype.eat = function () {
+            console.log('TO IMPLEMENT');
+        };
+        Play.prototype.advancePlace = function () {
+            var piece = this.from.piece;
+            this.to.selected = false;
+            this.from.selected = false;
+            this.from.piece = null;
+            this.to.piece = piece;
+        };
         return Play;
     }());
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Play;
 });
-define("Models/Board", ["require", "exports", "Models/Place", "Models/Play"], function (require, exports, Place_1, Play_1) {
+define("Models/GameController", ["require", "exports", "Actions/Play"], function (require, exports, Play_1) {
+    "use strict";
+    var GameController = (function () {
+        function GameController(pl1, pl2) {
+            this._currentPlayer = pl1;
+            this.player1 = pl1;
+            this.player2 = pl2;
+            this.initElement();
+            this.formatScoreElement();
+        }
+        GameController.prototype.initElement = function () {
+            this.socoreElement = document.createElement('p');
+            this.socoreElement.classList.add('checkers-score');
+        };
+        Object.defineProperty(GameController.prototype, "element", {
+            get: function () {
+                return this.socoreElement;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(GameController.prototype, "currentPlayer", {
+            get: function () {
+                return this._currentPlayer;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        GameController.prototype.isCurrentPlayer = function (player) {
+            return this._currentPlayer === player;
+        };
+        GameController.prototype.changePlayer = function () {
+            if (this.isCurrentPlayer(this.player1)) {
+                this._currentPlayer = this.player2;
+            }
+            else {
+                this._currentPlayer = this.player1;
+            }
+            this.formatScoreElement();
+            return this.currentPlayer;
+        };
+        GameController.prototype.formatScoreElement = function () {
+            var littlePiece = document.createElement('span');
+            littlePiece.classList.add('little-piece');
+            littlePiece.style.backgroundColor = this.currentPlayer.color;
+            this.socoreElement.innerHTML = 'É a vez do jogador ';
+            this.socoreElement.appendChild(littlePiece);
+        };
+        GameController.prototype.play = function (from, to) {
+            var play = new Play_1.default(from, to);
+            if (!to.isEmpty() && !this.isCurrentPlayer(to.piece.player) &&
+                !play.isEatingAnEnemyPiece()) {
+                return false;
+            }
+            var isAdvancingPlace = play.isAdvancingPlace();
+            var isPlaySuccess = play.performPlay();
+            if (isPlaySuccess && isAdvancingPlace) {
+                this.changePlayer();
+            }
+            return isPlaySuccess;
+        };
+        return GameController;
+    }());
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.default = GameController;
+});
+define("Models/Board", ["require", "exports", "Models/Place", "Models/GameController"], function (require, exports, Place_1, GameController_1) {
     "use strict";
     var BOARD_WIDTH = 8;
     var BOARD_HEIGHT = 8;
@@ -232,10 +343,14 @@ define("Models/Board", ["require", "exports", "Models/Place", "Models/Play"], fu
         function Board(renderSelector, pl1, pl2) {
             this.boardMask = [];
             this.selectedPlace = null;
+            this.setupGameController(pl1, pl2);
             this.setupBoard();
             this.setupPlayers(pl1, pl2);
             this.renderHTML(renderSelector);
         }
+        Board.prototype.setupGameController = function (pl1, pl2) {
+            this.gameController = new GameController_1.default(pl1, pl2);
+        };
         Board.prototype.setupPlayers = function (pl1, pl2) {
             pl1.forward = true;
             this.initPieces(pl1);
@@ -281,22 +396,9 @@ define("Models/Board", ["require", "exports", "Models/Place", "Models/Play"], fu
             return place;
         };
         Board.prototype.handleClick = function (place) {
-            var play = new Play_1.default(this.selectedPlace, place);
-            if (!play.canPlay())
+            var playSuccessful = this.gameController.play(this.selectedPlace, place);
+            if (!playSuccessful)
                 return;
-            if (play.isSelectingPiece()) {
-                place.selected = true;
-            }
-            else if (play.isUnselectingPiece()) {
-                place.selected = false;
-            }
-            else if (play.isMovingCorrectly()) {
-                place.selected = false;
-                this.selectedPlace.selected = false;
-                var piece = this.selectedPlace.piece;
-                this.selectedPlace.piece = null;
-                place.piece = piece;
-            }
             if (place.selected) {
                 this.selectedPlace = place;
             }
@@ -309,7 +411,9 @@ define("Models/Board", ["require", "exports", "Models/Place", "Models/Play"], fu
             this.table.classList.add('checkers-board');
         };
         Board.prototype.renderHTML = function (renderSelector) {
-            document.querySelector(renderSelector).appendChild(this.table);
+            var rootElement = document.querySelector(renderSelector);
+            rootElement.appendChild(this.gameController.element);
+            rootElement.appendChild(this.table);
         };
         return Board;
     }());

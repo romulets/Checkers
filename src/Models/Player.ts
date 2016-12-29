@@ -7,8 +7,10 @@ export default class Player {
   public forward = false
 
   private _pieces : Piece[]
+  private _color : string
 
   public constructor (pieceColor : string) {
+    this._color = pieceColor
     this.initPieces(pieceColor)
   }
 
@@ -22,6 +24,10 @@ export default class Player {
 
   get pieces () :  Piece[] {
     return this._pieces
+  }
+
+  get color () : string {
+    return this._color
   }
 
 }

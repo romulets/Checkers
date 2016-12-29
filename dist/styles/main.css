@@ -3,9 +3,22 @@
   margin: 0;
 }
 
+#checkers {
+  width: 100%;
+  text-align: center;
+}
+
+.checkers-board {
+  margin: 0 auto
+}
+
+.checkers-score {
+   padding: 10px
+}
+
 .checkers-board td{
   width: 70px;
-  height: 80px;
+  height: 70px;
   cursor: pointer;
   text-align: center;
 }
@@ -14,11 +27,18 @@
   background-color: #808fec !important;
 }
 
-
 .checkers-board .piece {
   display: inline-block;
   width: 50px;
   height: 50px;
+  border-radius: 100%;
+  border: 2px dotted #000;
+}
+
+.little-piece {
+  display: inline-flex;
+  width: 10px;
+  height: 10px;
   border-radius: 100%;
   border: 2px dotted #000;
 }
