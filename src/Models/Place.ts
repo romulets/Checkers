@@ -9,18 +9,18 @@ export default class Place {
 
   public X : number
   public Y : number
-
   private _piece : Piece = null
   private playable : boolean
   private _selected : boolean = false
+
   private td :HTMLElement
 
   constructor (playable : boolean) {
     this.playable = playable
-
-    this.td = document.createElement('td')
-    this.td.style.backgroundColor = this.playable ? DARK_PLACE : LIGHT_PLACE 
+    this.createDOMElement()
   }
+
+  /* Getters and Setters */
 
   get selected () : boolean {
     return this._selected
@@ -42,22 +42,32 @@ export default class Place {
   }
 
   set piece (piece : Piece) {
-    if (!this.playable && piece !== null) throw new InvalidPlayException('Place not playable')
-    if (!this.isEmpty() && piece !== null) throw new NonEmptyPlaceException(this)
+    if (piece !== null) {
+      if (!this.playable)  throw new InvalidPlayException('Place not playable')
+      if (!this.isEmpty()) throw new NonEmptyPlaceException(this)
+    }
+
     this._piece = piece
-    this.handleDOM()
+    this.appendsPieceElement()
   }
 
-  private handleDOM() : void {
+  get element () : HTMLElement {
+    return this.td
+  }
+
+  /* Methods */
+
+  private  createDOMElement () : void {
+    this.td = document.createElement('td')
+    this.td.style.backgroundColor = this.playable ? DARK_PLACE : LIGHT_PLACE
+  }
+
+  private appendsPieceElement () : void {
     if(this.isEmpty()) {
       this.td.innerHTML = ''
     } else {
       this.element.appendChild(this.piece.element)
     }
-  }
-
-  get element() : HTMLElement {
-    return this.td
   }
 
   public isEmpty () : boolean {

@@ -1,14 +1,14 @@
 import Place from './Place'
 import Player from './Player'
 import Play from '../Actions/Play'
-import GameController from './GameController'
+import Mediator from './Mediator'
 
 const BOARD_WIDTH = 8
 const BOARD_HEIGHT = 8
 
 export default class Board {
 
-  private gameController : GameController
+  private mediator : Mediator
   private table : HTMLElement
   private boardMask: Place[][] = []
   private player1 : Player
@@ -16,20 +16,20 @@ export default class Board {
   private selectedPlace : Place = null
 
   public constructor (renderSelector : string, pl1 : Player, pl2 : Player) {
-      this.setupGameController(pl1, pl2)
+      this.setupMediator(pl1, pl2)
       this.setupBoard()
       this.setupPlayers(pl1, pl2)
       this.renderHTML(renderSelector)
   }
 
-  private setupGameController(pl1 : Player, pl2 : Player) {
-    this.gameController = new GameController(pl1, pl2)
+  private setupMediator(pl1 : Player, pl2 : Player) {
+    this.mediator = new Mediator(pl1, pl2)
   }
 
   private setupPlayers (pl1 : Player, pl2 : Player) : void {
-    pl1.forward = true
+    pl1.moveFoward = true
+    pl2.moveFoward = false
     this.initPieces(pl1)
-    pl2.forward = false
     this.initPieces(pl2)
   }
 
@@ -55,7 +55,7 @@ export default class Board {
   }
 
   private initPieces (player : Player) {
-    var initialLine = player.forward ? 0 : 5
+    var initialLine = player.moveFoward ? 0 : 5
     var place, x, y
     var piecesInBoardCount = 0;
 
@@ -80,7 +80,7 @@ export default class Board {
   }
 
   private handleClick (place : Place) : void {
-    var playSuccessful = this.gameController
+    var playSuccessful = this.mediator
                               .play(this.selectedPlace, place, this.boardMask)
 
     if (!playSuccessful) return
@@ -99,7 +99,7 @@ export default class Board {
 
   private renderHTML (renderSelector : string) : void {
     var rootElement = document.querySelector(renderSelector)
-    rootElement.appendChild(this.gameController.element)
+    rootElement.appendChild(this.mediator.element)
     rootElement.appendChild(this.table)
   }
 

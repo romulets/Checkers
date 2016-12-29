@@ -3,14 +3,22 @@ import Piece from '../Models/Piece'
 
 export default class Play {
 
-  private from : Place
-  private to : Place
+  private _from : Place
+  private _to : Place
   private board : Place[][]
 
   constructor (from : Place, to : Place, board : Place[][]) {
-      this.from = from
-      this.to = to
+      this._from = from
+      this._to = to
       this.board = board
+  }
+
+  get from () : Place {
+    return this._from
+  }
+
+  get to () : Place {
+    return this._to
   }
 
   private isEating () : boolean {
@@ -49,9 +57,9 @@ export default class Play {
     var { from, to } = this
 
     if (from === null || from.isEmpty()) return false
-    if (from.piece.isKing) return true
+    if (from.piece.isQueen) return true
 
-    if (from.piece.player.forward) {
+    if (from.piece.player.moveFoward) {
       return this.isMoveToTopRight() || this.isMoveToTopLeft()
     } else {
         return this.isMoveToBotRight() || this.isMoveToBotLeft()
@@ -115,7 +123,7 @@ export default class Play {
       place = this.board[to.X + 1][to.Y - 1]
     } else if (this.isMoveToTopLeft()) {
       place = this.board[to.X + 1][to.Y + 1]
-    } else if (this.isMoveToBotRight) {
+    } else if (this.isMoveToBotRight()) {
       place = this.board[to.X - 1][to.Y - 1]
     } else {
       place = this.board[to.X - 1][to.Y + 1]

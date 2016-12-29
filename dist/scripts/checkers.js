@@ -5,19 +5,13 @@ var __extends = (this && this.__extends) || function (d, b) {
 };
 define("Models/Player", ["require", "exports", "Models/Piece"], function (require, exports, Piece_1) {
     "use strict";
-    var INITIAL__pieces_COUNT = 12;
+    var INITIAL_PIECES_COUNT = 12;
     var Player = (function () {
-        function Player(pieceColor) {
-            this.forward = false;
-            this._color = pieceColor;
-            this.initPieces(pieceColor);
+        function Player(piecesColor) {
+            this.moveFoward = false;
+            this._color = piecesColor;
+            this.initPieces(piecesColor);
         }
-        Player.prototype.initPieces = function (pieceColor) {
-            this._pieces = [];
-            for (var i = 0; i < INITIAL__pieces_COUNT; i++) {
-                this._pieces.push(new Piece_1.default(this, pieceColor));
-            }
-        };
         Object.defineProperty(Player.prototype, "pieces", {
             get: function () {
                 return this._pieces;
@@ -32,6 +26,12 @@ define("Models/Player", ["require", "exports", "Models/Piece"], function (requir
             enumerable: true,
             configurable: true
         });
+        Player.prototype.initPieces = function (piecesColor) {
+            this._pieces = [];
+            for (var i = 0; i < INITIAL_PIECES_COUNT; i++) {
+                this._pieces.push(new Piece_1.default(this, piecesColor));
+            }
+        };
         return Player;
     }());
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -41,11 +41,9 @@ define("Models/Piece", ["require", "exports"], function (require, exports) {
     "use strict";
     var Piece = (function () {
         function Piece(player, color) {
-            this.isKing = false;
-            this.span = document.createElement('span');
-            this.span.classList.add('piece');
-            this.span.style.backgroundColor = color;
             this._player = player;
+            this.isQueen = false;
+            this.createDOMElement(color);
         }
         Object.defineProperty(Piece.prototype, "element", {
             get: function () {
@@ -61,6 +59,11 @@ define("Models/Piece", ["require", "exports"], function (require, exports) {
             enumerable: true,
             configurable: true
         });
+        Piece.prototype.createDOMElement = function (color) {
+            this.span = document.createElement('span');
+            this.span.classList.add('piece');
+            this.span.style.backgroundColor = color;
+        };
         return Piece;
     }());
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -114,8 +117,7 @@ define("Models/Place", ["require", "exports", "Exceptions/NonEmptyPlaceException
             this._piece = null;
             this._selected = false;
             this.playable = playable;
-            this.td = document.createElement('td');
-            this.td.style.backgroundColor = this.playable ? DARK_PLACE : LIGHT_PLACE;
+            this.createDOMElement();
         }
         Object.defineProperty(Place.prototype, "selected", {
             get: function () {
@@ -139,24 +141,18 @@ define("Models/Place", ["require", "exports", "Exceptions/NonEmptyPlaceException
                 return this._piece;
             },
             set: function (piece) {
-                if (!this.playable && piece !== null)
-                    throw new InvalidPlayException_2.default('Place not playable');
-                if (!this.isEmpty() && piece !== null)
-                    throw new NonEmptyPlaceException_1.default(this);
+                if (piece !== null) {
+                    if (!this.playable)
+                        throw new InvalidPlayException_2.default('Place not playable');
+                    if (!this.isEmpty())
+                        throw new NonEmptyPlaceException_1.default(this);
+                }
                 this._piece = piece;
-                this.handleDOM();
+                this.appendsPieceElement();
             },
             enumerable: true,
             configurable: true
         });
-        Place.prototype.handleDOM = function () {
-            if (this.isEmpty()) {
-                this.td.innerHTML = '';
-            }
-            else {
-                this.element.appendChild(this.piece.element);
-            }
-        };
         Object.defineProperty(Place.prototype, "element", {
             get: function () {
                 return this.td;
@@ -164,6 +160,18 @@ define("Models/Place", ["require", "exports", "Exceptions/NonEmptyPlaceException
             enumerable: true,
             configurable: true
         });
+        Place.prototype.createDOMElement = function () {
+            this.td = document.createElement('td');
+            this.td.style.backgroundColor = this.playable ? DARK_PLACE : LIGHT_PLACE;
+        };
+        Place.prototype.appendsPieceElement = function () {
+            if (this.isEmpty()) {
+                this.td.innerHTML = '';
+            }
+            else {
+                this.element.appendChild(this.piece.element);
+            }
+        };
         Place.prototype.isEmpty = function () {
             return this._piece === null;
         };
@@ -185,10 +193,24 @@ define("Actions/Play", ["require", "exports"], function (require, exports) {
     "use strict";
     var Play = (function () {
         function Play(from, to, board) {
-            this.from = from;
-            this.to = to;
+            this._from = from;
+            this._to = to;
             this.board = board;
         }
+        Object.defineProperty(Play.prototype, "from", {
+            get: function () {
+                return this._from;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Play.prototype, "to", {
+            get: function () {
+                return this._to;
+            },
+            enumerable: true,
+            configurable: true
+        });
         Play.prototype.isEating = function () {
             return this.from !== null && this.to !== null &&
                 !this.from.isEmpty() && !this.to.isEmpty();
@@ -225,9 +247,9 @@ define("Actions/Play", ["require", "exports"], function (require, exports) {
             var _a = this, from = _a.from, to = _a.to;
             if (from === null || from.isEmpty())
                 return false;
-            if (from.piece.isKing)
+            if (from.piece.isQueen)
                 return true;
-            if (from.piece.player.forward) {
+            if (from.piece.player.moveFoward) {
                 return this.isMoveToTopRight() || this.isMoveToTopLeft();
             }
             else {
@@ -288,7 +310,7 @@ define("Actions/Play", ["require", "exports"], function (require, exports) {
             else if (this.isMoveToTopLeft()) {
                 place = this.board[to.X + 1][to.Y + 1];
             }
-            else if (this.isMoveToBotRight) {
+            else if (this.isMoveToBotRight()) {
                 place = this.board[to.X - 1][to.Y - 1];
             }
             else {
@@ -308,73 +330,87 @@ define("Actions/Play", ["require", "exports"], function (require, exports) {
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Play;
 });
-define("Models/GameController", ["require", "exports", "Actions/Play"], function (require, exports, Play_1) {
+define("Models/Mediator", ["require", "exports", "Actions/Play"], function (require, exports, Play_1) {
     "use strict";
-    var GameController = (function () {
-        function GameController(pl1, pl2) {
+    var Mediator = (function () {
+        function Mediator(pl1, pl2) {
             this._currentPlayer = pl1;
             this.player1 = pl1;
             this.player2 = pl2;
-            this.initElement();
+            this.createDOMElement();
             this.formatScoreElement();
         }
-        GameController.prototype.initElement = function () {
-            this.socoreElement = document.createElement('p');
-            this.socoreElement.classList.add('checkers-score');
-        };
-        Object.defineProperty(GameController.prototype, "element", {
+        Object.defineProperty(Mediator.prototype, "element", {
             get: function () {
                 return this.socoreElement;
             },
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(GameController.prototype, "currentPlayer", {
+        Object.defineProperty(Mediator.prototype, "currentPlayer", {
             get: function () {
                 return this._currentPlayer;
             },
             enumerable: true,
             configurable: true
         });
-        GameController.prototype.isCurrentPlayer = function (player) {
+        Mediator.prototype.play = function (from, to, board) {
+            var play = new Play_1.default(from, to, board);
+            if (!this.canPlay(play))
+                return false;
+            return this.performPlay(play);
+        };
+        Mediator.prototype.canPlay = function (play) {
+            var to = play.to, from = play.from;
+            return to.isEmpty() ||
+                this.isCurrentPlayer(to.piece.player) ||
+                play.isEatingAnEnemyPiece();
+        };
+        Mediator.prototype.performPlay = function (play) {
+            var isAdvancingPlace = play.isAdvancingPlace();
+            var isPlaySuccess = play.performPlay();
+            if (isPlaySuccess && isAdvancingPlace) {
+                this.alternateBetweenPlayers();
+            }
+            return isPlaySuccess;
+        };
+        Mediator.prototype.isCurrentPlayer = function (player) {
             return this._currentPlayer === player;
         };
-        GameController.prototype.changePlayer = function () {
+        Mediator.prototype.alternateBetweenPlayers = function () {
+            this.changePlayer();
+            this.formatScoreElement();
+            return this.currentPlayer;
+        };
+        Mediator.prototype.changePlayer = function () {
             if (this.isCurrentPlayer(this.player1)) {
                 this._currentPlayer = this.player2;
             }
             else {
                 this._currentPlayer = this.player1;
             }
-            this.formatScoreElement();
-            return this.currentPlayer;
         };
-        GameController.prototype.formatScoreElement = function () {
-            var littlePiece = document.createElement('span');
-            littlePiece.classList.add('little-piece');
-            littlePiece.style.backgroundColor = this.currentPlayer.color;
+        Mediator.prototype.createDOMElement = function () {
+            this.socoreElement = document.createElement('p');
+            this.socoreElement.classList.add('checkers-score');
+        };
+        Mediator.prototype.formatScoreElement = function () {
+            var littlePiece = this.getLittlePiceElement();
             this.socoreElement.innerHTML = 'É a vez do jogador ';
             this.socoreElement.appendChild(littlePiece);
         };
-        GameController.prototype.play = function (from, to, board) {
-            var play = new Play_1.default(from, to, board);
-            if (!to.isEmpty() && !this.isCurrentPlayer(to.piece.player) &&
-                !play.isEatingAnEnemyPiece()) {
-                return false;
-            }
-            var isAdvancingPlace = play.isAdvancingPlace();
-            var isPlaySuccess = play.performPlay();
-            if (isPlaySuccess && isAdvancingPlace) {
-                this.changePlayer();
-            }
-            return isPlaySuccess;
+        Mediator.prototype.getLittlePiceElement = function () {
+            var littlePiece = document.createElement('span');
+            littlePiece.classList.add('little-piece');
+            littlePiece.style.backgroundColor = this.currentPlayer.color;
+            return littlePiece;
         };
-        return GameController;
+        return Mediator;
     }());
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.default = GameController;
+    exports.default = Mediator;
 });
-define("Models/Board", ["require", "exports", "Models/Place", "Models/GameController"], function (require, exports, Place_1, GameController_1) {
+define("Models/Board", ["require", "exports", "Models/Place", "Models/Mediator"], function (require, exports, Place_1, Mediator_1) {
     "use strict";
     var BOARD_WIDTH = 8;
     var BOARD_HEIGHT = 8;
@@ -382,18 +418,18 @@ define("Models/Board", ["require", "exports", "Models/Place", "Models/GameContro
         function Board(renderSelector, pl1, pl2) {
             this.boardMask = [];
             this.selectedPlace = null;
-            this.setupGameController(pl1, pl2);
+            this.setupMediator(pl1, pl2);
             this.setupBoard();
             this.setupPlayers(pl1, pl2);
             this.renderHTML(renderSelector);
         }
-        Board.prototype.setupGameController = function (pl1, pl2) {
-            this.gameController = new GameController_1.default(pl1, pl2);
+        Board.prototype.setupMediator = function (pl1, pl2) {
+            this.mediator = new Mediator_1.default(pl1, pl2);
         };
         Board.prototype.setupPlayers = function (pl1, pl2) {
-            pl1.forward = true;
+            pl1.moveFoward = true;
+            pl2.moveFoward = false;
             this.initPieces(pl1);
-            pl2.forward = false;
             this.initPieces(pl2);
         };
         Board.prototype.setupBoard = function () {
@@ -413,7 +449,7 @@ define("Models/Board", ["require", "exports", "Models/Place", "Models/GameContro
             }
         };
         Board.prototype.initPieces = function (player) {
-            var initialLine = player.forward ? 0 : 5;
+            var initialLine = player.moveFoward ? 0 : 5;
             var place, x, y;
             var piecesInBoardCount = 0;
             for (x = initialLine; x < initialLine + 3; x++) {
@@ -435,7 +471,7 @@ define("Models/Board", ["require", "exports", "Models/Place", "Models/GameContro
             return place;
         };
         Board.prototype.handleClick = function (place) {
-            var playSuccessful = this.gameController
+            var playSuccessful = this.mediator
                 .play(this.selectedPlace, place, this.boardMask);
             if (!playSuccessful)
                 return;
@@ -452,7 +488,7 @@ define("Models/Board", ["require", "exports", "Models/Place", "Models/GameContro
         };
         Board.prototype.renderHTML = function (renderSelector) {
             var rootElement = document.querySelector(renderSelector);
-            rootElement.appendChild(this.gameController.element);
+            rootElement.appendChild(this.mediator.element);
             rootElement.appendChild(this.table);
         };
         return Board;
@@ -462,11 +498,11 @@ define("Models/Board", ["require", "exports", "Models/Place", "Models/GameContro
 });
 define("Checkers", ["require", "exports", "Models/Board", "Models/Player"], function (require, exports, Board_1, Player_1) {
     "use strict";
-    function init(selector, pl1Color, pl2Color) {
-        var player1 = new Player_1.default(pl1Color);
-        var player2 = new Player_1.default(pl2Color);
-        var board = new Board_1.default(selector, player1, player2);
+    function startGame(elementSelector, player1Color, player2Color) {
+        var player1 = new Player_1.default(player1Color);
+        var player2 = new Player_1.default(player2Color);
+        var board = new Board_1.default(elementSelector, player1, player2);
     }
-    exports.init = init;
+    exports.startGame = startGame;
 });
 //# sourceMappingURL=checkers.js.map
