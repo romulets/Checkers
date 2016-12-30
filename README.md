@@ -11,7 +11,9 @@ To initialize the game, import Checkers module and call `Checkers.startGame(sele
 
 Obs:  There is default players. The params is necessary just in case of changing players' names or piece colors
 
-There is two examples:
+### Examples
+
+There is two examples compiled to [AMD] (http://requirejs.org/) modularization:
 * [Using default players] (./examples/default-players.html)
 * [Using custom players] (./examples/custom-players.html)
 
