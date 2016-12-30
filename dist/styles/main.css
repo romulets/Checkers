@@ -33,6 +33,22 @@
   height: 50px;
   border-radius: 100%;
   border: 2px dotted #000;
+  position: relative;
+}
+.checkers-board .piece.queen {
+  border: 2px dotted #ede509;
+}
+
+.checkers-board .piece.queen:after {
+  content: '';
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  border-radius: 100%;
+  background-color: #ede509;
+  top: 14px;
+  left: 14px;
+  border: 4px dotted white;
 }
 
 .little-piece {

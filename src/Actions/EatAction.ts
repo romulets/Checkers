@@ -4,16 +4,18 @@ import InvalidPlayException from '../Exceptions/InvalidPlayException'
 import NonEmptyPlaceException from '../Exceptions/NonEmptyPlaceException'
 import { Action } from './Action'
 import {
-  isMoveToTopRight, isMoveToTopLeft, isMoveToBotRight, isEating
+  isMoveToTopRight, isMoveToTopLeft, isMoveToBotRight, isEating, isAdvancingPlace
 } from './Helpers'
 
 export default class EatAction implements Action {
 
+  public OnEat : (newTo : Place) => void
   private from : Place
   private to : Place
   private board : Place[][]
 
   constructor (from : Place, to : Place, board : Place[][]) {
+    this.OnEat = null
     this.from = from
     this.to = to
     this.board = board
@@ -22,7 +24,8 @@ export default class EatAction implements Action {
   /* Methods */
 
   public canPerform () : boolean  {
-    return isEating(this.from, this.to)
+    let  { from, to } = this
+    return isEating(from, to) && isAdvancingPlace(from, to)
   }
 
   public perform () : boolean {
@@ -48,7 +51,14 @@ export default class EatAction implements Action {
     to.piece = null
     to.selected = false
     placeToEat.piece = piece
+    this.fireOnEat(placeToEat)
     return true
+  }
+
+  private fireOnEat(newTo : Place) : void {
+    if (this.OnEat !== null) {
+      this.OnEat(newTo)
+    }
   }
 
   private getPlaceToEat() : Place {

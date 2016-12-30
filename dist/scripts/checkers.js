@@ -247,11 +247,13 @@ define("Actions/Helpers", ["require", "exports"], function (require, exports) {
     }
     exports.isMoveToBotLeft = isMoveToBotLeft;
     function isAdvancingPlace(from, to) {
-        if (from === null || from.isEmpty())
+        if (from === null || from.isEmpty() || from.equalsTo(to))
             return false;
-        if (from.piece.isQueen)
-            return true;
-        if (from.piece.player.moveFoward) {
+        if (from.piece.isQueen) {
+            return isMoveToTopRight(from, to) || isMoveToTopLeft(from, to) ||
+                isMoveToBotRight(from, to) || isMoveToBotLeft(from, to);
+        }
+        else if (from.piece.player.moveFoward) {
             return isMoveToTopRight(from, to) || isMoveToTopLeft(from, to);
         }
         else {
@@ -264,12 +266,14 @@ define("Actions/EatAction", ["require", "exports", "Exceptions/InvalidPlayExcept
     "use strict";
     var EatAction = (function () {
         function EatAction(from, to, board) {
+            this.OnEat = null;
             this.from = from;
             this.to = to;
             this.board = board;
         }
         EatAction.prototype.canPerform = function () {
-            return Helpers_1.isEating(this.from, this.to);
+            var _a = this, from = _a.from, to = _a.to;
+            return Helpers_1.isEating(from, to) && Helpers_1.isAdvancingPlace(from, to);
         };
         EatAction.prototype.perform = function () {
             var placeToEat;
@@ -294,7 +298,13 @@ define("Actions/EatAction", ["require", "exports", "Exceptions/InvalidPlayExcept
             to.piece = null;
             to.selected = false;
             placeToEat.piece = piece;
+            this.fireOnEat(placeToEat);
             return true;
+        };
+        EatAction.prototype.fireOnEat = function (newTo) {
+            if (this.OnEat !== null) {
+                this.OnEat(newTo);
+            }
         };
         EatAction.prototype.getPlaceToEat = function () {
             var place;
@@ -378,32 +388,35 @@ define("consts", ["require", "exports"], function (require, exports) {
     exports.BOARD_WIDTH = 8;
     exports.BOARD_HEIGHT = 8;
 });
-define("Actions/CrownAction", ["require", "exports", "consts"], function (require, exports, consts_1) {
+define("Actions/CoronationAction", ["require", "exports", "consts"], function (require, exports, consts_1) {
     "use strict";
-    var CrownAction = (function () {
-        function CrownAction(to) {
+    var CoronationAction = (function () {
+        function CoronationAction(to) {
             this.to = to;
         }
-        CrownAction.prototype.canPerform = function () {
-            if (this.to.isEmpty())
+        CoronationAction.prototype.canPerform = function () {
+            var to = this.to;
+            if (this.doesntNeedSeeCoordinate())
                 return false;
-            var piece = this.to.piece;
+            var piece = to.piece;
             var player = piece.player;
-            console.log(player.moveFoward, piece.X);
             return (player.moveFoward && piece.X === consts_1.BOARD_HEIGHT - 1) ||
                 (!player.moveFoward && piece.X === 0);
         };
-        CrownAction.prototype.perform = function () {
-            console.log("performed");
+        CoronationAction.prototype.doesntNeedSeeCoordinate = function () {
+            var to = this.to;
+            return to === null || to.isEmpty() || to.piece.isQueen;
+        };
+        CoronationAction.prototype.perform = function () {
             this.to.piece.isQueen = true;
             return true;
         };
-        return CrownAction;
+        return CoronationAction;
     }());
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.default = CrownAction;
+    exports.default = CoronationAction;
 });
-define("Actions/PlayAction", ["require", "exports", "Actions/EatAction", "Actions/AdvanceAction", "Actions/SelectAction", "Actions/UnselectAction", "Actions/CrownAction", "Actions/Helpers"], function (require, exports, EatAction_1, AdvanceAction_1, SelectAction_1, UnselectAction_1, CrownAction_1, Helpers_2) {
+define("Actions/PlayAction", ["require", "exports", "Actions/EatAction", "Actions/AdvanceAction", "Actions/SelectAction", "Actions/UnselectAction", "Actions/CoronationAction", "Actions/Helpers"], function (require, exports, EatAction_1, AdvanceAction_1, SelectAction_1, UnselectAction_1, CoronationAction_1, Helpers_2) {
     "use strict";
     var PlayAction = (function () {
         function PlayAction(from, to, board) {
@@ -462,9 +475,15 @@ define("Actions/PlayAction", ["require", "exports", "Actions/EatAction", "Action
             return [
                 new SelectAction_1.default(from, to),
                 new UnselectAction_1.default(from, to),
-                new EatAction_1.default(from, to, board),
+                this.getEatAction(from, to, board),
                 new AdvanceAction_1.default(from, to),
             ];
+        };
+        PlayAction.prototype.getEatAction = function (from, to, board) {
+            var _this = this;
+            var eat = new EatAction_1.default(from, to, board);
+            eat.OnEat = function (newTo) { return _this._to = newTo; };
+            return eat;
         };
         PlayAction.prototype.performAfterActions = function () {
             var action, i;
@@ -479,7 +498,7 @@ define("Actions/PlayAction", ["require", "exports", "Actions/EatAction", "Action
         PlayAction.prototype.getAfterActionList = function () {
             var to = this.to;
             return [
-                new CrownAction_1.default(to)
+                new CoronationAction_1.default(to)
             ];
         };
         return PlayAction;

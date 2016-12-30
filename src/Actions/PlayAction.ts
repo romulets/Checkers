@@ -4,7 +4,7 @@ import EatAction from './EatAction'
 import AdvanceAction from './AdvanceAction'
 import SelectAction from './SelectAction'
 import UnselectAction from './UnselectAction'
-import CrownAction from './CrownAction'
+import CoronationAction from './CoronationAction'
 import { Action } from './Action'
 import { isEatingAFriendPiece } from './Helpers'
 
@@ -66,9 +66,15 @@ export default class PlayAction implements Action {
     return [
       new SelectAction(from, to),
       new UnselectAction(from, to),
-      new EatAction(from, to, board),
+      this.getEatAction(from, to, board),
       new AdvanceAction(from, to),
     ]
+  }
+
+  private getEatAction (from : Place, to : Place, board : Place[][]) : EatAction {
+    var eat = new EatAction(from, to, board)
+    eat.OnEat = newTo => this._to = newTo
+    return eat
   }
 
   private performAfterActions () : void {
@@ -86,7 +92,7 @@ export default class PlayAction implements Action {
   private getAfterActionList () : Action[] {
     let { to } = this
     return [
-      new CrownAction(to)
+      new CoronationAction(to)
     ]
   }
 

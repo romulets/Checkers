@@ -58,10 +58,12 @@ export function isMoveToBotLeft (from : Place, to : Place) : boolean {
  * @function
  */
 export function isAdvancingPlace (from : Place, to : Place) : boolean {
-  if (from === null || from.isEmpty()) return false
-  if (from.piece.isQueen) return true
+  if (from === null || from.isEmpty() || from.equalsTo(to)) return false
 
-  if (from.piece.player.moveFoward) {
+  if (from.piece.isQueen) {
+    return isMoveToTopRight(from, to) || isMoveToTopLeft(from , to) ||
+      isMoveToBotRight(from, to) || isMoveToBotLeft(from, to)
+  } else if (from.piece.player.moveFoward) {
     return isMoveToTopRight(from, to) || isMoveToTopLeft(from , to)
   } else {
       return isMoveToBotRight(from, to) || isMoveToBotLeft(from, to)
