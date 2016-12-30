@@ -3,7 +3,7 @@ import { Action } from './Action'
 import { BOARD_HEIGHT } from '../consts'
 import PlayResponse from '../Models/PlayResponse'
 
-export default class CoronationAction implements Action {
+export default class CrownQueenAction implements Action {
 
   private to : Place
 

@@ -432,13 +432,13 @@ define("consts", ["require", "exports"], function (require, exports) {
     exports.BOARD_WIDTH = 8;
     exports.BOARD_HEIGHT = 8;
 });
-define("Actions/CoronationAction", ["require", "exports", "consts", "Models/PlayResponse"], function (require, exports, consts_1, PlayResponse_3) {
+define("Actions/CrownQueenAction", ["require", "exports", "consts", "Models/PlayResponse"], function (require, exports, consts_1, PlayResponse_3) {
     "use strict";
-    var CoronationAction = (function () {
-        function CoronationAction(to) {
+    var CrownQueenAction = (function () {
+        function CrownQueenAction(to) {
             this.to = to;
         }
-        CoronationAction.prototype.canPerform = function () {
+        CrownQueenAction.prototype.canPerform = function () {
             var to = this.to;
             if (this.doesntNeedSeeCoordinate())
                 return false;
@@ -447,18 +447,18 @@ define("Actions/CoronationAction", ["require", "exports", "consts", "Models/Play
             return (player.moveFoward && piece.X === consts_1.BOARD_HEIGHT - 1) ||
                 (!player.moveFoward && piece.X === 0);
         };
-        CoronationAction.prototype.doesntNeedSeeCoordinate = function () {
+        CrownQueenAction.prototype.doesntNeedSeeCoordinate = function () {
             var to = this.to;
             return to === null || to.isEmpty() || to.piece.isQueen;
         };
-        CoronationAction.prototype.perform = function () {
+        CrownQueenAction.prototype.perform = function () {
             this.to.piece.isQueen = true;
             return PlayResponse_3.default.finished();
         };
-        return CoronationAction;
+        return CrownQueenAction;
     }());
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.default = CoronationAction;
+    exports.default = CrownQueenAction;
 });
 define("Actions/EatAction", ["require", "exports", "Models/PlayResponse", "Exceptions/InvalidPlayException", "Exceptions/NonEmptyPlaceException", "Actions/helpers"], function (require, exports, PlayResponse_4, InvalidPlayException_5, NonEmptyPlaceException_2, helpers_3) {
     "use strict";
@@ -554,7 +554,7 @@ define("Actions/UnselectAction", ["require", "exports", "Models/PlayResponse"], 
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = UnselectAction;
 });
-define("Actions/PlayAction", ["require", "exports", "Actions/EatAction", "Actions/SelectAction", "Models/PlayResponse", "Actions/AdvanceAction", "Actions/UnselectAction", "Actions/ComboPlayAction", "Actions/CoronationAction", "Actions/helpers"], function (require, exports, EatAction_1, SelectAction_1, PlayResponse_7, AdvanceAction_1, UnselectAction_1, ComboPlayAction_1, CoronationAction_1, helpers_4) {
+define("Actions/PlayAction", ["require", "exports", "Actions/EatAction", "Actions/SelectAction", "Models/PlayResponse", "Actions/AdvanceAction", "Actions/UnselectAction", "Actions/ComboPlayAction", "Actions/CrownQueenAction", "Actions/helpers"], function (require, exports, EatAction_1, SelectAction_1, PlayResponse_7, AdvanceAction_1, UnselectAction_1, ComboPlayAction_1, CrownQueenAction_1, helpers_4) {
     "use strict";
     var PlayAction = (function () {
         function PlayAction(from, to, board) {
@@ -654,7 +654,7 @@ define("Actions/PlayAction", ["require", "exports", "Actions/EatAction", "Action
         PlayAction.prototype.getAfterActionList = function () {
             var to = this.to;
             return [
-                new CoronationAction_1.default(to),
+                new CrownQueenAction_1.default(to),
                 this.getComboPlayAction()
             ];
         };

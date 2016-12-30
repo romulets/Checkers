@@ -7,7 +7,7 @@ import PlayResponse from '../Models/PlayResponse'
 import AdvanceAction from './AdvanceAction'
 import UnselectAction from './UnselectAction'
 import ComboPlayAction from './ComboPlayAction'
-import CoronationAction from './CoronationAction'
+import CrownQueenAction from './CrownQueenAction'
 import { isEatingAFriendPiece, isAdvancingPlace } from './helpers'
 
 export default class PlayAction implements Action {
@@ -109,7 +109,7 @@ export default class PlayAction implements Action {
   private getAfterActionList () : Action[] {
     let { to } = this
     return [
-      new CoronationAction(to),
+      new CrownQueenAction(to),
       this.getComboPlayAction()
     ]
   }
