@@ -1,6 +1,6 @@
 import Piece from './Piece'
-import NonEmptyPlaceException from '../Exceptions/NonEmptyPlaceException'
 import InvalidPlayException from '../Exceptions/InvalidPlayException'
+import NonEmptyPlaceException from '../Exceptions/NonEmptyPlaceException'
 
 const LIGHT_PLACE = '#CCC'
 const DARK_PLACE = '#AAA'

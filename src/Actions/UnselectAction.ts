@@ -1,8 +1,8 @@
-import PlayAction from './PlayAction'
 import Place from '../Models/Place'
 import { Action } from './Action'
+import PlayResponse from '../Models/PlayResponse'
 
-export default class SelectAction implements Action {
+export default class UnselectAction implements Action {
 
   private from : Place
   private to : Place
@@ -16,12 +16,12 @@ export default class SelectAction implements Action {
 
   public canPerform () : boolean {
     let { from, to } = this
-    return from === null && !to.isEmpty()
+    return from !== null && from.equalsTo(to)
   }
 
-  public perform () : boolean {
-    this.to.selected = true
-    return true
+  public perform () : PlayResponse {
+    this.to.selected = false
+    return PlayResponse.stillHappening()
   }
 
 }

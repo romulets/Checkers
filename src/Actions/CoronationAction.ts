@@ -1,6 +1,7 @@
 import Place from '../Models/Place'
 import { Action } from './Action'
 import { BOARD_HEIGHT } from '../consts'
+import PlayResponse from '../Models/PlayResponse'
 
 export default class CoronationAction implements Action {
 
@@ -27,9 +28,9 @@ export default class CoronationAction implements Action {
     return to === null || to.isEmpty() || to.piece.isQueen
   }
 
-  public perform () : boolean {
+  public perform () : PlayResponse {
     this.to.piece.isQueen = true
-    return true
+    return PlayResponse.finished()
   }
 
 }

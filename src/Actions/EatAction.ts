@@ -1,11 +1,13 @@
-import PlayAction from './PlayAction'
 import Place from '../Models/Place'
+import { Action } from './Action'
+import PlayResponse from '../Models/PlayResponse'
 import InvalidPlayException from '../Exceptions/InvalidPlayException'
 import NonEmptyPlaceException from '../Exceptions/NonEmptyPlaceException'
-import { Action } from './Action'
 import {
-  isMoveToTopRight, isMoveToTopLeft, isMoveToBotRight, isEating, isAdvancingPlace
-} from './Helpers'
+          isEating,
+          isAdvancingPlace,
+          indentifyNextPlaceAfterEat
+        } from './helpers'
 
 export default class EatAction implements Action {
 
@@ -28,17 +30,21 @@ export default class EatAction implements Action {
     return isEating(from, to) && isAdvancingPlace(from, to)
   }
 
-  public perform () : boolean {
+  public perform () : PlayResponse {
     let placeToEat
 
     try {
-      placeToEat = this.getPlaceToEat()
+      placeToEat = indentifyNextPlaceAfterEat(this.from, this.to, this.board)
       if(!placeToEat.isEmpty()) throw new NonEmptyPlaceException(placeToEat)
     } catch (ex) {
-      if (ex instanceof InvalidPlayException) return false
+      if (ex instanceof InvalidPlayException) return PlayResponse.invalid()
     }
 
-    return this.eat(placeToEat)
+    if (this.eat(placeToEat))  {
+      return PlayResponse.finished()
+    } else {
+      return PlayResponse.invalid()
+    }
   }
 
   private eat(placeToEat : Place) : boolean {
@@ -59,41 +65,6 @@ export default class EatAction implements Action {
     if (this.OnEat !== null) {
       this.OnEat(newTo)
     }
-  }
-
-  private getPlaceToEat() : Place {
-    let place
-
-    try {
-      place = this.indentifyPlace()
-    } catch (ex) {
-      if (ex instanceof TypeError) {
-        place = undefined
-      }
-    }
-
-    if(place === undefined) {
-      throw new InvalidPlayException("Place doesn't exists")
-    }
-
-    return place
-  }
-
-  private indentifyPlace () : Place {
-    let { from, to } = this
-    let place
-
-    if (isMoveToTopRight(from, to)) {
-      place = this.board[to.X + 1][to.Y - 1]
-    } else if (isMoveToTopLeft(from, to)) {
-      place = this.board[to.X + 1][to.Y + 1]
-    } else if (isMoveToBotRight(from, to)) {
-      place = this.board[to.X - 1][to.Y - 1]
-    } else {
-      place = this.board[to.X - 1][to.Y + 1]
-    }
-
-    return place
   }
 
 }

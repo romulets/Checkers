@@ -1,7 +1,8 @@
 import Place from './Place'
 import Player from './Player'
-import PlayAction from '../Actions/PlayAction'
 import Mediator from './Mediator'
+import PlayAction from '../Actions/PlayAction'
+import { PlayStatus } from './PlayStatus'
 import { BOARD_WIDTH, BOARD_HEIGHT } from '../consts'
 
 export default class Board {
@@ -81,14 +82,9 @@ export default class Board {
   }
 
   private play (place : Place) : void {
-    let couldPlay = this.mediator.play(this.selectedPlace, place, this.boardMask)
-    if (!couldPlay) return
-
-    if (place.selected) {
-      this.selectedPlace = place
-    } else {
-      this.selectedPlace = null
-    }
+    let playResponse = this.mediator.play(this.selectedPlace,place, this.boardMask)
+    if (playResponse.playStatus === PlayStatus.INVALID) return
+    this.selectedPlace = playResponse.selectedPlace
   }
 
   private createTableDOMElement () : void {

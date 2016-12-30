@@ -1,7 +1,9 @@
-import Player from './Player'
 import Place from './Place'
+import Player from './Player'
 import PlayAction from '../Actions/PlayAction'
-import { isEatingAnEnemyPiece, isAdvancingPlace } from '../Actions/Helpers'
+import PlayResponse from './PlayResponse'
+import { PlayStatus } from './PlayStatus'
+import { isEatingAnEnemyPiece, isAdvancingPlace } from '../Actions/helpers'
 
 export default class Mediator {
 
@@ -30,32 +32,32 @@ export default class Mediator {
 
   /* Methods */
 
-  public play (from : Place, to : Place, board : Place[][]) : boolean {
+  public play (from : Place, to : Place, board : Place[][]) : PlayResponse {
     let play = new PlayAction(from, to, board)
-    if (!this.canPlay(play)) return false
+    if (!this.canPlay(play)) return PlayResponse.invalid()
     return this.perform(play)
   }
 
   private canPlay (play : PlayAction) : boolean {
     let { from, to } = play
+
     return to.isEmpty() ||
-            this.isCurrentPlayer(to.piece.player) ||
-            isEatingAnEnemyPiece(from, to)
+            this.isSelectingCurrentPlayer(to.piece.player)||
+            isEatingAnEnemyPiece(from, to)      
   }
 
-  private perform (play : PlayAction) : boolean {
+  private perform (play : PlayAction) : PlayResponse {
     let { from, to } = play
-    let advancingPlace = isAdvancingPlace(from, to)
-    let playSuccessful = play.perform()
+    let playResponse = play.perform()
 
-    if(playSuccessful && advancingPlace) {
+    if (playResponse.playStatus === PlayStatus.FINISHED) {
       this.alternateBetweenPlayers()
     }
 
-    return playSuccessful
+    return playResponse
   }
 
-  public isCurrentPlayer (player : Player) {
+  public isSelectingCurrentPlayer (player : Player) {
    return this._currentPlayer === player
   }
 
@@ -66,7 +68,7 @@ export default class Mediator {
   }
 
   private changePlayer () : void {
-    if (this.isCurrentPlayer(this.player1)) {
+    if (this.isSelectingCurrentPlayer(this.player1)) {
       this._currentPlayer  = this.player2
     } else {
       this._currentPlayer  = this.player1
