@@ -7,10 +7,12 @@ define("Models/Player", ["require", "exports", "Models/Piece"], function (requir
     "use strict";
     var INITIAL_PIECES_COUNT = 12;
     var Player = (function () {
-        function Player(piecesColor) {
+        function Player(name, piecesColor) {
             this.moveFoward = false;
             this._color = piecesColor;
+            this._name = name;
             this.initPieces(piecesColor);
+            this.createDOMElement();
         }
         Object.defineProperty(Player.prototype, "pieces", {
             get: function () {
@@ -26,11 +28,80 @@ define("Models/Player", ["require", "exports", "Models/Piece"], function (requir
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(Player.prototype, "name", {
+            get: function () {
+                return this._name;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Player.prototype, "element", {
+            get: function () {
+                return this.wrapperElement;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Player.prototype, "piecesInGame", {
+            get: function () {
+                var pieces = [];
+                this.pieces.forEach(function (p) {
+                    if (p.inGame)
+                        pieces.push(p);
+                });
+                return pieces;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Player.prototype, "eatedPieces", {
+            get: function () {
+                var pieces = [];
+                this.pieces.forEach(function (p) {
+                    if (!p.inGame)
+                        pieces.push(p);
+                });
+                return pieces;
+            },
+            enumerable: true,
+            configurable: true
+        });
         Player.prototype.initPieces = function (piecesColor) {
             this._pieces = [];
             for (var i = 0; i < INITIAL_PIECES_COUNT; i++) {
                 this._pieces.push(new Piece_1.default(this, piecesColor));
             }
+        };
+        Player.prototype.createDOMElement = function () {
+            this.wrapperElement = document.createElement('div');
+            this.wrapperElement.classList.add('checkers-player');
+            this.wrapperElement.appendChild(this.getNameElement());
+            this.wrapperElement.appendChild(this.getEatedPiecesElement());
+            this.wrapperElement.appendChild(this.getPiecesInGameElement());
+        };
+        Player.prototype.getNameElement = function () {
+            this.nameElement = document.createElement('h4');
+            this.nameElement.innerHTML = this.name + " ";
+            this.nameElement.appendChild(this.getLittlePieceElement());
+            return this.nameElement;
+        };
+        Player.prototype.getLittlePieceElement = function () {
+            var littlePiece = document.createElement('span');
+            littlePiece.classList.add('little-piece');
+            littlePiece.style.backgroundColor = this.color;
+            return littlePiece;
+        };
+        Player.prototype.getPiecesInGameElement = function () {
+            this.piecesInGameElement = document.createElement('p');
+            return this.piecesInGameElement;
+        };
+        Player.prototype.getEatedPiecesElement = function () {
+            this.eatedPiecesElement = document.createElement('p');
+            return this.eatedPiecesElement;
+        };
+        Player.prototype.updateElementInfos = function () {
+            this.piecesInGameElement.innerHTML = "In Game pieces: " + this.piecesInGame.length;
+            this.eatedPiecesElement.innerHTML = "Eaten pieces: " + this.eatedPieces.length;
         };
         return Player;
     }());
@@ -705,6 +776,7 @@ define("Models/Mediator", ["require", "exports", "Actions/PlayAction", "Models/P
             this.createDOMElement();
             this.formatScoreElement();
             this.plays = [];
+            this.setCurrentPlayerClass();
         }
         Object.defineProperty(Mediator.prototype, "element", {
             get: function () {
@@ -756,27 +828,31 @@ define("Models/Mediator", ["require", "exports", "Actions/PlayAction", "Models/P
             return this.currentPlayer;
         };
         Mediator.prototype.changePlayer = function () {
+            this.unsetPlayersClass();
             if (this.isSelectingCurrentPlayer(this.player1)) {
                 this._currentPlayer = this.player2;
             }
             else {
                 this._currentPlayer = this.player1;
             }
+            this.setCurrentPlayerClass();
+        };
+        Mediator.prototype.setCurrentPlayerClass = function () {
+            this.currentPlayer.element.classList.add('playing');
+        };
+        Mediator.prototype.unsetPlayersClass = function () {
+            this.player1.element.classList.remove('playing');
+            this.player2.element.classList.remove('playing');
         };
         Mediator.prototype.createDOMElement = function () {
-            this.socoreElement = document.createElement('p');
+            this.socoreElement = document.createElement('div');
             this.socoreElement.classList.add('checkers-score');
+            this.socoreElement.appendChild(this.player1.element);
+            this.socoreElement.appendChild(this.player2.element);
         };
         Mediator.prototype.formatScoreElement = function () {
-            var littlePiece = this.getLittlePiceElement();
-            this.socoreElement.innerHTML = 'É a vez do jogador ';
-            this.socoreElement.appendChild(littlePiece);
-        };
-        Mediator.prototype.getLittlePiceElement = function () {
-            var littlePiece = document.createElement('span');
-            littlePiece.classList.add('little-piece');
-            littlePiece.style.backgroundColor = this.currentPlayer.color;
-            return littlePiece;
+            this.player1.updateElementInfos();
+            this.player2.updateElementInfos();
         };
         return Mediator;
     }());
@@ -853,8 +929,8 @@ define("Models/Board", ["require", "exports", "Models/Place", "Models/Mediator",
         };
         Board.prototype.renderHTML = function (renderSelector) {
             var rootElement = document.querySelector(renderSelector);
-            rootElement.appendChild(this.mediator.element);
             rootElement.appendChild(this.table);
+            rootElement.appendChild(this.mediator.element);
         };
         return Board;
     }());
@@ -863,9 +939,9 @@ define("Models/Board", ["require", "exports", "Models/Place", "Models/Mediator",
 });
 define("Checkers", ["require", "exports", "Models/Board", "Models/Player"], function (require, exports, Board_1, Player_1) {
     "use strict";
-    function startGame(elementSelector, player1Color, player2Color) {
-        var player1 = new Player_1.default(player1Color);
-        var player2 = new Player_1.default(player2Color);
+    function startGame(elementSelector, player1, player2) {
+        player1 = player1 || new Player_1.default('Player 1', '#1d733c');
+        player2 = player2 || new Player_1.default('Player 2', '#7d1e1e');
         var board = new Board_1.default(elementSelector, player1, player2);
     }
     exports.startGame = startGame;

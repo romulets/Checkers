@@ -20,6 +20,7 @@ export default class Mediator {
     this.createDOMElement()
     this.formatScoreElement()
     this.plays = []
+    this.setCurrentPlayerClass()
   }
 
   /* Getters and Setters */
@@ -77,29 +78,35 @@ export default class Mediator {
   }
 
   private changePlayer () : void {
+    this.unsetPlayersClass()
     if (this.isSelectingCurrentPlayer(this.player1)) {
       this._currentPlayer  = this.player2
     } else {
       this._currentPlayer  = this.player1
     }
+    this.setCurrentPlayerClass()
+  }
+
+  private setCurrentPlayerClass () : void {
+    this.currentPlayer.element.classList.add('playing')
+  }
+
+  private unsetPlayersClass () : void {
+    this.player1.element.classList.remove('playing')
+    this.player2.element.classList.remove('playing')
+
   }
 
   private createDOMElement () : void {
-    this.socoreElement = document.createElement('p')
+    this.socoreElement = document.createElement('div')
     this.socoreElement.classList.add('checkers-score')
+    this.socoreElement.appendChild(this.player1.element)
+    this.socoreElement.appendChild(this.player2.element)
   }
 
   private formatScoreElement () : void {
-    let littlePiece = this.getLittlePiceElement()
-    this.socoreElement.innerHTML = 'É a vez do jogador '
-    this.socoreElement.appendChild(littlePiece)
-  }
-
-  private getLittlePiceElement () : HTMLElement {
-    var littlePiece = document.createElement('span')
-    littlePiece.classList.add('little-piece')
-    littlePiece.style.backgroundColor = this.currentPlayer.color
-    return littlePiece
+    this.player1.updateElementInfos()
+    this.player2.updateElementInfos()
   }
 
 }

@@ -94,8 +94,8 @@ export default class Board {
 
   private renderHTML (renderSelector : string) : void {
     let rootElement = document.querySelector(renderSelector)
-    rootElement.appendChild(this.mediator.element)
     rootElement.appendChild(this.table)
+    rootElement.appendChild(this.mediator.element)
   }
 
 }

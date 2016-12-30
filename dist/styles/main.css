@@ -1,19 +1,46 @@
 * {
   padding: 0;
   margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  line-height: 20px
 }
 
 #checkers {
   width: 100%;
   text-align: center;
+  margin-top: 20px
 }
 
 .checkers-board {
-  margin: 0 auto
+  display: inline-block;
 }
 
 .checkers-score {
-   padding: 10px
+   display: inline-block;
+   margin-left: 20px;
+   vertical-align: top;
+}
+
+.checkers-player {
+  padding: 30px;
+  margin-bottom: 20px;
+  background-color: #f9ecec;
+  text-align: left;
+  position: relative;
+  border: 2px solid #c3c3c3
+}
+
+.checkers-player.playing {
+  border: 2px solid #ede509
+}
+
+.checkers-player.playing:after {
+  content: 'Your turn';
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  font-size: 12px;
 }
 
 .checkers-board td{
