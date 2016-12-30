@@ -537,9 +537,10 @@ define("Actions/SelectAction", ["require", "exports", "Models/PlayResponse"], fu
 define("Actions/UnselectAction", ["require", "exports", "Models/PlayResponse"], function (require, exports, PlayResponse_6) {
     "use strict";
     var UnselectAction = (function () {
-        function UnselectAction(from, to) {
+        function UnselectAction(from, to, lastPlay) {
             this.from = from;
             this.to = to;
+            this.lastPlay = lastPlay || null;
         }
         UnselectAction.prototype.canPerform = function () {
             var _a = this, from = _a.from, to = _a.to;
@@ -547,7 +548,12 @@ define("Actions/UnselectAction", ["require", "exports", "Models/PlayResponse"], 
         };
         UnselectAction.prototype.perform = function () {
             this.to.selected = false;
-            return PlayResponse_6.default.stillHappening();
+            if (this.lastPlay != null && this.lastPlay.isComboPlay) {
+                return PlayResponse_6.default.finished();
+            }
+            else {
+                return PlayResponse_6.default.stillHappening();
+            }
         };
         return UnselectAction;
     }());
@@ -557,11 +563,14 @@ define("Actions/UnselectAction", ["require", "exports", "Models/PlayResponse"], 
 define("Actions/PlayAction", ["require", "exports", "Actions/EatAction", "Actions/SelectAction", "Models/PlayResponse", "Actions/AdvanceAction", "Actions/UnselectAction", "Actions/ComboPlayAction", "Actions/CrownQueenAction", "Actions/helpers"], function (require, exports, EatAction_1, SelectAction_1, PlayResponse_7, AdvanceAction_1, UnselectAction_1, ComboPlayAction_1, CrownQueenAction_1, helpers_4) {
     "use strict";
     var PlayAction = (function () {
-        function PlayAction(from, to, board) {
+        function PlayAction(from, to, board, lastPlay) {
             this._from = from;
             this._to = to;
             this._board = board;
+            this._lastPlay = lastPlay || null;
             this._eatedPiece = false;
+            this._isAdvancingPlace = false;
+            this._isComboPlay = false;
         }
         Object.defineProperty(PlayAction.prototype, "from", {
             get: function () {
@@ -584,6 +593,13 @@ define("Actions/PlayAction", ["require", "exports", "Actions/EatAction", "Action
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(PlayAction.prototype, "lastPlay", {
+            get: function () {
+                return this._lastPlay;
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(PlayAction.prototype, "eatedPiece", {
             get: function () {
                 return this._eatedPiece;
@@ -594,6 +610,13 @@ define("Actions/PlayAction", ["require", "exports", "Actions/EatAction", "Action
         Object.defineProperty(PlayAction.prototype, "isAdvancingPlace", {
             get: function () {
                 return helpers_4.isAdvancingPlace(this.from, this.to);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(PlayAction.prototype, "isComboPlay", {
+            get: function () {
+                return this._isComboPlay;
             },
             enumerable: true,
             configurable: true
@@ -624,10 +647,10 @@ define("Actions/PlayAction", ["require", "exports", "Actions/EatAction", "Action
             return PlayResponse_7.default.invalid();
         };
         PlayAction.prototype.getSequencedActionList = function () {
-            var _a = this, from = _a.from, to = _a.to, board = _a.board;
+            var _a = this, from = _a.from, to = _a.to, board = _a.board, lastPlay = _a.lastPlay;
             return [
                 new SelectAction_1.default(from, to),
-                new UnselectAction_1.default(from, to),
+                new UnselectAction_1.default(from, to, lastPlay),
                 this.getEatAction(),
                 new AdvanceAction_1.default(from, to),
             ];
@@ -663,6 +686,7 @@ define("Actions/PlayAction", ["require", "exports", "Actions/EatAction", "Action
             var action = new ComboPlayAction_1.default(this.to, this.board, this._eatedPiece);
             action.onDiscoverHasMoreMovies = function () {
                 _this.playResponse = PlayResponse_7.default.stillHappening(_this.to);
+                _this._isComboPlay = true;
             };
             return action;
         };
@@ -680,6 +704,7 @@ define("Models/Mediator", ["require", "exports", "Actions/PlayAction", "Models/P
             this.player2 = pl2;
             this.createDOMElement();
             this.formatScoreElement();
+            this.plays = [];
         }
         Object.defineProperty(Mediator.prototype, "element", {
             get: function () {
@@ -696,10 +721,16 @@ define("Models/Mediator", ["require", "exports", "Actions/PlayAction", "Models/P
             configurable: true
         });
         Mediator.prototype.play = function (from, to, board) {
-            var play = new PlayAction_1.default(from, to, board);
+            var play = new PlayAction_1.default(from, to, board, this.getLastPlay());
             if (!this.canPlay(play))
                 return PlayResponse_8.default.invalid();
             return this.perform(play);
+        };
+        Mediator.prototype.getLastPlay = function () {
+            var playsQuantity = this.plays.length;
+            if (playsQuantity === 0)
+                return null;
+            return this.plays[playsQuantity - 1];
         };
         Mediator.prototype.canPlay = function (play) {
             var from = play.from, to = play.to;
@@ -713,6 +744,7 @@ define("Models/Mediator", ["require", "exports", "Actions/PlayAction", "Models/P
             if (playResponse.playStatus === PlayStatus_2.PlayStatus.FINISHED) {
                 this.alternateBetweenPlayers();
             }
+            this.plays.push(play);
             return playResponse;
         };
         Mediator.prototype.isSelectingCurrentPlayer = function (player) {

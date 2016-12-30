@@ -7,7 +7,7 @@ export default class CrownQueenAction implements Action {
 
   private to : Place
 
-  constructor (to : Place ) {
+  constructor (to : Place) {
     this.to = to
   }
 

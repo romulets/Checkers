@@ -11,6 +11,7 @@ export default class Mediator {
   private player1 : Player
   private player2 : Player
   private socoreElement : HTMLElement
+  private plays : PlayAction[]
 
   constructor (pl1 : Player, pl2 : Player) {
     this._currentPlayer = pl1
@@ -18,6 +19,7 @@ export default class Mediator {
     this.player2 = pl2
     this.createDOMElement()
     this.formatScoreElement()
+    this.plays = []
   }
 
   /* Getters and Setters */
@@ -33,9 +35,15 @@ export default class Mediator {
   /* Methods */
 
   public play (from : Place, to : Place, board : Place[][]) : PlayResponse {
-    let play = new PlayAction(from, to, board)
+    let play = new PlayAction(from, to, board, this.getLastPlay())
     if (!this.canPlay(play)) return PlayResponse.invalid()
     return this.perform(play)
+  }
+
+  private getLastPlay () : PlayAction {
+    let playsQuantity = this.plays.length
+    if (playsQuantity === 0) return null
+    return this.plays[playsQuantity - 1]
   }
 
   private canPlay (play : PlayAction) : boolean {
@@ -43,7 +51,7 @@ export default class Mediator {
 
     return to.isEmpty() ||
             this.isSelectingCurrentPlayer(to.piece.player)||
-            isEatingAnEnemyPiece(from, to)      
+            isEatingAnEnemyPiece(from, to)
   }
 
   private perform (play : PlayAction) : PlayResponse {
@@ -54,6 +62,7 @@ export default class Mediator {
       this.alternateBetweenPlayers()
     }
 
+    this.plays.push(play)
     return playResponse
   }
 

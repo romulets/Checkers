@@ -14,16 +14,24 @@ export default class PlayAction implements Action {
 
   private _eatedPiece : boolean
   private _isAdvancingPlace : boolean
+  private _isComboPlay : boolean
   private _from : Place
   private _to : Place
   private _board : Place[][]
+  private _lastPlay : PlayAction
   private playResponse : PlayResponse
 
-  constructor (from : Place, to : Place, board : Place[][]) {
+  constructor (from : Place,
+                to : Place,
+                board : Place[][],
+                lastPlay? : PlayAction) {
     this._from = from
     this._to = to
     this._board = board
+    this._lastPlay = lastPlay || null
     this._eatedPiece = false
+    this._isAdvancingPlace = false
+    this._isComboPlay = false
   }
 
   /* Getters and Setters */
@@ -40,12 +48,20 @@ export default class PlayAction implements Action {
     return this._board
   }
 
+  get lastPlay () : PlayAction {
+    return this._lastPlay
+  }
+
   get eatedPiece () : boolean {
     return this._eatedPiece
   }
 
   get isAdvancingPlace () : boolean {
     return isAdvancingPlace(this.from, this.to)
+  }
+
+  get isComboPlay () : boolean {
+    return this._isComboPlay
   }
 
   /* Methods */
@@ -76,10 +92,10 @@ export default class PlayAction implements Action {
   }
 
   private getSequencedActionList () : Action[] {
-    let { from, to, board } = this
+    let { from, to, board, lastPlay } = this
     return [
       new SelectAction(from, to),
-      new UnselectAction(from, to),
+      new UnselectAction(from, to, lastPlay),
       this.getEatAction(),
       new AdvanceAction(from, to),
     ]
@@ -118,6 +134,7 @@ export default class PlayAction implements Action {
     let action = new ComboPlayAction(this.to, this.board, this._eatedPiece)
     action.onDiscoverHasMoreMovies = () => {
       this.playResponse = PlayResponse.stillHappening(this.to)
+      this._isComboPlay = true
     }
     return action
   }
