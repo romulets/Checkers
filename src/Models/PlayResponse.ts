@@ -23,7 +23,7 @@ export default class PlayResponse {
 
   /* Methods */
 
-  public static invalid () : PlayResponse{
+  public static invalid () : PlayResponse {
     return new PlayResponse(PlayStatus.INVALID)
   }
 
@@ -31,7 +31,7 @@ export default class PlayResponse {
     return new PlayResponse(PlayStatus.FINISHED)
   }
 
-  public static stillHappening (selectedPlace? : Place) : PlayResponse{
+  public static stillHappening (selectedPlace? : Place) : PlayResponse {
     return new PlayResponse(PlayStatus.STILL_HAPPENING, selectedPlace)
   }
 }

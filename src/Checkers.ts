@@ -7,7 +7,7 @@ import Player from './Models/Player'
  * @param {string} player1 Player1
  * @param {string} player2 Player2
  */
-export function startGame(elementSelector : string,
+export function startGame (elementSelector : string,
                           player1? : Player,
                           player2? : Player) {
   player1 = player1 || new Player('Player 1', '#1d733c')

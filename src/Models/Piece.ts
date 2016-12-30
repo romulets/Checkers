@@ -1,9 +1,9 @@
 import Player from './Player'
+import Point from './Point'
 
 export default class Piece {
 
-  public X : number
-  public Y : number
+  public point : Point
   public inGame : boolean
   private _isQueen : boolean
   private span : HTMLElement

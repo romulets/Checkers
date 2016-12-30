@@ -19,8 +19,8 @@ export default class CrownQueenAction implements Action {
 
     let { piece } = to
     let { player } = piece
-    return (player.moveFoward && piece.X === BOARD_HEIGHT - 1) ||
-            (!player.moveFoward && piece.X === 0)
+    return (player.moveFoward && piece.point.x === BOARD_HEIGHT - 1) ||
+            (!player.moveFoward && piece.point.x === 0)
   }
 
   private doesntNeedSeeCoordinate() {

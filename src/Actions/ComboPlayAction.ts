@@ -1,4 +1,5 @@
 import Place from '../Models/Place'
+import Point from '../Models/Point'
 import { Action } from './Action'
 import PlayResponse from '../Models/PlayResponse'
 import InvalidPlayException from '../Exceptions/InvalidPlayException'
@@ -53,18 +54,20 @@ export default class ComboPlayAction implements Action {
   }
 
   private claimComboForForwarder () : boolean {
-    let { X, Y } = this.to
-    return this.canEatAt(X + 1, Y - 1) || this.canEatAt(X + 1, Y + 1)
+    let { x, y } = this.to.point
+    return this.canEatAt(new Point(x + 1, y - 1)) ||
+            this.canEatAt(new Point(x + 1, y + 1))
   }
 
   private claimComboForBackwarder () : boolean {
-    let { X, Y } = this.to
-    return this.canEatAt(X - 1, Y + 1) || this.canEatAt(X - 1, Y - 1)
+    let { x, y } = this.to.point
+    return this.canEatAt(new Point(x - 1, y + 1))
+            || this.canEatAt(new Point(x - 1, y - 1))
   }
 
-  private canEatAt (x : number, y : number) : boolean {
+  private canEatAt (point : Point) : boolean {
     try {
-      return this.eatAt(x, y)
+      return this.eatAt(point)
     } catch (ex) {
       if (ex instanceof InvalidPlayException || ex instanceof TypeError) {
         return false
@@ -72,9 +75,9 @@ export default class ComboPlayAction implements Action {
     }
   }
 
-  private eatAt (x : number, y : number) : boolean {
+  private eatAt (point : Point) : boolean {
     let intendedNextPlace, placeAfterEat
-    intendedNextPlace = this.board[x][y]
+    intendedNextPlace = this.board[point.x][point.y]
     placeAfterEat = indentifyNextPlaceAfterEat(this.to,
                                                 intendedNextPlace,
                                                 this.board)

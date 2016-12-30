@@ -1,4 +1,5 @@
 import Place from '../Models/Place'
+import Point from '../Models/Point'
 import InvalidPlayException from '../Exceptions/InvalidPlayException'
 
 /**
@@ -30,56 +31,26 @@ export function isEatingAnEnemyPiece (from : Place, to : Place) : boolean {
 /**
  * @function
  */
-export function isMoveToTopRight (from : Place, to : Place) : boolean {
-  return from.X === to.X - 1 && from.Y === to.Y + 1
-}
-
-/**
- * @function
- */
-export function isMoveToTopLeft (from : Place, to : Place) : boolean {
-  return from.X === to.X - 1 && from.Y === to.Y - 1
-}
-
-/**
- * @function
- */
-export function isMoveToBotRight (from : Place, to : Place) : boolean {
-  return from.X === to.X + 1 && from.Y === to.Y + 1
-}
-
-/**
- * @function
- */
-export function isMoveToBotLeft (from : Place, to : Place) : boolean {
-  return from.X === to.X + 1 && from.Y === to.Y - 1
-}
-
-/**
- * @function
- */
 export function isAdvancingPlace (from : Place, to : Place) : boolean {
   if (from === null || from.isEmpty() || from.equalsTo(to)) return false
 
-  if (from.piece.isQueen) {
-    return isMoveToTopRight(from, to) || isMoveToTopLeft(from , to) ||
-      isMoveToBotRight(from, to) || isMoveToBotLeft(from, to)
-  } else if (from.piece.player.moveFoward) {
-    return isMoveToTopRight(from, to) || isMoveToTopLeft(from , to)
-  } else {
-      return isMoveToBotRight(from, to) || isMoveToBotLeft(from, to)
-  }
+  let fromPoint = from.point
+  let toPoint = to.point
+
+  if (from.piece.isQueen) return fromPoint.isLongDiagon(toPoint)
+  if (from.piece.player.moveFoward) return fromPoint.isTop(toPoint)
+  else return fromPoint.isBot(toPoint)
 }
 
 /**
  * @function
  */
-export function indentifyNextPlaceAfterEat (from : Place, to : Place,
-                                    board : Place[][]) : Place {
+export function indentifyNextPlaceAfterEat (from : Place,
+                                            to : Place,
+                                            board : Place[][]) : Place {
   let place
-
   try {
-    place = getPlaceAfterEat(from, to, board)
+    place = getPlaceAfterEat(from.point, to.point, board)
   } catch (ex) {
     if (ex instanceof TypeError) {
       place = undefined
@@ -93,16 +64,11 @@ export function indentifyNextPlaceAfterEat (from : Place, to : Place,
   return place
  }
 
-function getPlaceAfterEat (from : Place, to : Place, board : Place[][]) : Place {
-  let place
-  if (isMoveToTopRight(from, to)) {
-    place = board[to.X + 1][to.Y - 1]
-  } else if (isMoveToTopLeft(from, to)) {
-    place = board[to.X + 1][to.Y + 1]
-  } else if (isMoveToBotRight(from, to)) {
-    place = board[to.X - 1][to.Y - 1]
-  } else {
-    place = board[to.X - 1][to.Y + 1]
-  }
-  return place
+function getPlaceAfterEat (from : Point,
+                            to : Point,
+                            board : Place[][]) : Place {
+  if (from.isTopRight(to)) return board[to.x + 1][to.y - 1]
+  if (from.isTopLeft(to)) return board[to.x + 1][to.y + 1]
+  if (from.isBotRight(to)) return board[to.x - 1][to.y - 1]
+  else return board[from.x - 1][to.y + 1]
 }

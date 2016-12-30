@@ -17,9 +17,9 @@ export default class Mediator {
     this._currentPlayer = pl1
     this.player1 = pl1
     this.player2 = pl2
+    this.plays = []
     this.createDOMElement()
     this.formatScoreElement()
-    this.plays = []
     this.setCurrentPlayerClass()
   }
 
@@ -49,7 +49,6 @@ export default class Mediator {
 
   private canPlay (play : PlayAction) : boolean {
     let { from, to } = play
-
     return to.isEmpty() ||
             this.isSelectingCurrentPlayer(to.piece.player)||
             isEatingAnEnemyPiece(from, to)
