@@ -70,5 +70,5 @@ function getPlaceAfterEat (from : Point,
   if (from.isTopRight(to)) return board[to.x + 1][to.y - 1]
   if (from.isTopLeft(to)) return board[to.x + 1][to.y + 1]
   if (from.isBotRight(to)) return board[to.x - 1][to.y - 1]
-  else return board[from.x - 1][to.y + 1]
+  else return board[to.x - 1][to.y + 1]
 }

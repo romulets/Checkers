@@ -39,7 +39,7 @@ export default class EatAction implements Action {
     } catch (ex) {
       if (ex instanceof InvalidPlayException) return PlayResponse.invalid()
     }
-
+    
     if (this.eat(placeToEat))  {
       return PlayResponse.finished()
     } else {

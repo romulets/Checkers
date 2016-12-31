@@ -434,7 +434,7 @@ define("Actions/helpers", ["require", "exports", "Exceptions/InvalidPlayExceptio
         if (from.isBotRight(to))
             return board[to.x - 1][to.y - 1];
         else
-            return board[from.x - 1][to.y + 1];
+            return board[to.x - 1][to.y + 1];
     }
 });
 define("Actions/AdvanceAction", ["require", "exports", "Models/PlayResponse", "Actions/helpers"], function (require, exports, PlayResponse_1, helpers_1) {
