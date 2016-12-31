@@ -108,6 +108,126 @@ define("Models/Player", ["require", "exports", "Models/Piece"], function (requir
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Player;
 });
+define("Exceptions/CheckersException", ["require", "exports"], function (require, exports) {
+    "use strict";
+    var CheckersException = (function () {
+        function CheckersException(message) {
+        }
+        return CheckersException;
+    }());
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.default = CheckersException;
+});
+define("Exceptions/UnextractablePathException", ["require", "exports", "Exceptions/CheckersException"], function (require, exports, CheckersException_1) {
+    "use strict";
+    var UnextractablePathException = (function (_super) {
+        __extends(UnextractablePathException, _super);
+        function UnextractablePathException() {
+            var _this = _super.apply(this, arguments) || this;
+            _this.name = 'UnextractablePathException';
+            return _this;
+        }
+        return UnextractablePathException;
+    }(CheckersException_1.default));
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.default = UnextractablePathException;
+});
+define("Models/Point", ["require", "exports", "Exceptions/UnextractablePathException"], function (require, exports, UnextractablePathException_1) {
+    "use strict";
+    var Point = (function () {
+        function Point(x, y) {
+            this._x = x;
+            this._y = y;
+            this.walkedPath = [];
+        }
+        Object.defineProperty(Point.prototype, "x", {
+            get: function () {
+                return this._x;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Point.prototype, "y", {
+            get: function () {
+                return this._y;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Point.prototype.equalsTo = function (other) {
+            return this.x === other.x && this.y === other.y;
+        };
+        Point.prototype.isTop = function (other) {
+            return this.isTopRight(other) || this.isTopLeft(other);
+        };
+        Point.prototype.isTopRight = function (other) {
+            return this.x === other.x - 1 && this.y === other.y + 1;
+        };
+        Point.prototype.isTopLeft = function (other) {
+            return this.x === other.x - 1 && this.y === other.y - 1;
+        };
+        Point.prototype.isBot = function (other) {
+            return this.isBotRight(other) || this.isBotLeft(other);
+        };
+        Point.prototype.isBotRight = function (other) {
+            return this.x === other.x + 1 && this.y === other.y + 1;
+        };
+        Point.prototype.isBotLeft = function (other) {
+            return this.x === other.x + 1 && this.y === other.y - 1;
+        };
+        Point.prototype.isLongDiagon = function (other) {
+            return this.isLongDiagonTopRight(other) ||
+                this.isLongDiagonTopLeft(other) ||
+                this.isLongDiagonBotLeft(other) ||
+                this.isLongDiagonBotRight(other);
+        };
+        Point.prototype.isLongDiagonTopRight = function (other) {
+            var comparisson = function (point) { return point.x >= other.x && point.y <= other.y; };
+            var walk = function (toWalk) { return new Point(toWalk.x - 1, toWalk.y + 1); };
+            return this.isLongDiagonGeneric(other, comparisson, walk);
+        };
+        Point.prototype.isLongDiagonTopLeft = function (other) {
+            var comparisson = function (point) { return point.x >= other.x && point.y >= other.y; };
+            var walk = function (toWalk) { return new Point(toWalk.x - 1, toWalk.y - 1); };
+            return this.isLongDiagonGeneric(other, comparisson, walk);
+        };
+        Point.prototype.isLongDiagonBotRight = function (other) {
+            var comparisson = function (point) { return point.x <= other.x && point.y <= other.y; };
+            var walk = function (toWalk) { return new Point(toWalk.x + 1, toWalk.y + 1); };
+            return this.isLongDiagonGeneric(other, comparisson, walk);
+        };
+        Point.prototype.isLongDiagonBotLeft = function (other) {
+            var comparisson = function (toCompare) { return toCompare.x <= other.x && toCompare.y >= other.y; };
+            var walk = function (toWalk) { return new Point(toWalk.x + 1, toWalk.y - 1); };
+            return this.isLongDiagonGeneric(other, comparisson, walk);
+        };
+        Point.prototype.isLongDiagonGeneric = function (other, comparisson, walk) {
+            var floatPoint = new Point(this.x, this.y);
+            this.walkedPath = [];
+            while (comparisson(floatPoint)) {
+                floatPoint = walk(floatPoint);
+                this.walkedPath.push(floatPoint);
+                if (floatPoint.x == other.x && floatPoint.y == other.y)
+                    return true;
+            }
+            return false;
+        };
+        Point.prototype.getPathTo = function (other) {
+            if (this.isLongDiagonTopRight(other))
+                return this.walkedPath;
+            if (this.isLongDiagonTopLeft(other))
+                return this.walkedPath;
+            if (this.isLongDiagonBotLeft(other))
+                return this.walkedPath;
+            if (this.isLongDiagonBotRight(other))
+                return this.walkedPath;
+            throw new UnextractablePathException_1.default();
+        };
+        return Point;
+    }());
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.default = Point;
+});
 define("Models/Piece", ["require", "exports"], function (require, exports) {
     "use strict";
     var Piece = (function () {
@@ -157,17 +277,7 @@ define("Models/Piece", ["require", "exports"], function (require, exports) {
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Piece;
 });
-define("Exceptions/CheckersException", ["require", "exports"], function (require, exports) {
-    "use strict";
-    var CheckersException = (function () {
-        function CheckersException(message) {
-        }
-        return CheckersException;
-    }());
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.default = CheckersException;
-});
-define("Exceptions/InvalidPlayException", ["require", "exports", "Exceptions/CheckersException"], function (require, exports, CheckersException_1) {
+define("Exceptions/InvalidPlayException", ["require", "exports", "Exceptions/CheckersException"], function (require, exports, CheckersException_2) {
     "use strict";
     var InvalidPlayException = (function (_super) {
         __extends(InvalidPlayException, _super);
@@ -177,7 +287,7 @@ define("Exceptions/InvalidPlayException", ["require", "exports", "Exceptions/Che
             return _this;
         }
         return InvalidPlayException;
-    }(CheckersException_1.default));
+    }(CheckersException_2.default));
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = InvalidPlayException;
 });
@@ -196,7 +306,7 @@ define("Exceptions/NonEmptyPlaceException", ["require", "exports", "Exceptions/I
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = NonEmptyPlaceException;
 });
-define("Models/Place", ["require", "exports", "Exceptions/InvalidPlayException", "Exceptions/NonEmptyPlaceException"], function (require, exports, InvalidPlayException_2, NonEmptyPlaceException_1) {
+define("Models/Place", ["require", "exports", "Models/Point", "Exceptions/InvalidPlayException", "Exceptions/NonEmptyPlaceException"], function (require, exports, Point_1, InvalidPlayException_2, NonEmptyPlaceException_1) {
     "use strict";
     var LIGHT_PLACE = '#CCC';
     var DARK_PLACE = '#AAA';
@@ -205,6 +315,7 @@ define("Models/Place", ["require", "exports", "Exceptions/InvalidPlayException",
             this._piece = null;
             this._selected = false;
             this.playable = playable;
+            this.point = new Point_1.default(0, 0);
             this.createDOMElement();
         }
         Object.defineProperty(Place.prototype, "selected", {
@@ -230,12 +341,8 @@ define("Models/Place", ["require", "exports", "Exceptions/InvalidPlayException",
             },
             set: function (piece) {
                 if (piece !== null) {
-                    if (!this.playable)
-                        throw new InvalidPlayException_2.default('Place not playable');
-                    if (!this.isEmpty())
-                        throw new NonEmptyPlaceException_1.default(this);
-                    piece.X = this.X;
-                    piece.Y = this.Y;
+                    this.checkSetPiece();
+                    piece.point = this.point;
                 }
                 this._piece = piece;
                 this.appendsPieceElement();
@@ -250,6 +357,12 @@ define("Models/Place", ["require", "exports", "Exceptions/InvalidPlayException",
             enumerable: true,
             configurable: true
         });
+        Place.prototype.checkSetPiece = function () {
+            if (!this.playable)
+                throw new InvalidPlayException_2.default('Place not playable');
+            if (!this.isEmpty())
+                throw new NonEmptyPlaceException_1.default(this);
+        };
         Place.prototype.createDOMElement = function () {
             this.td = document.createElement('td');
             this.td.style.backgroundColor = this.playable ? DARK_PLACE : LIGHT_PLACE;
@@ -271,8 +384,7 @@ define("Models/Place", ["require", "exports", "Exceptions/InvalidPlayException",
         Place.prototype.equalsTo = function (place) {
             if (place === null)
                 return false;
-            return this.X === place.X &&
-                this.Y === place.Y;
+            return this.point.equalsTo(place.point);
         };
         return Place;
     }());
@@ -326,7 +438,7 @@ define("Models/PlayResponse", ["require", "exports", "Models/PlayStatus"], funct
 define("Actions/Action", ["require", "exports"], function (require, exports) {
     "use strict";
 });
-define("Actions/helpers", ["require", "exports", "Exceptions/InvalidPlayException"], function (require, exports, InvalidPlayException_3) {
+define("Actions/helpers", ["require", "exports", "Exceptions/InvalidPlayException", "Exceptions/UnextractablePathException"], function (require, exports, InvalidPlayException_3, UnextractablePathException_2) {
     "use strict";
     function isEating(from, to) {
         return from !== null && to !== null &&
@@ -345,45 +457,47 @@ define("Actions/helpers", ["require", "exports", "Exceptions/InvalidPlayExceptio
             !from.equalsTo(to);
     }
     exports.isEatingAnEnemyPiece = isEatingAnEnemyPiece;
-    function isMoveToTopRight(from, to) {
-        return from.X === to.X - 1 && from.Y === to.Y + 1;
-    }
-    exports.isMoveToTopRight = isMoveToTopRight;
-    function isMoveToTopLeft(from, to) {
-        return from.X === to.X - 1 && from.Y === to.Y - 1;
-    }
-    exports.isMoveToTopLeft = isMoveToTopLeft;
-    function isMoveToBotRight(from, to) {
-        return from.X === to.X + 1 && from.Y === to.Y + 1;
-    }
-    exports.isMoveToBotRight = isMoveToBotRight;
-    function isMoveToBotLeft(from, to) {
-        return from.X === to.X + 1 && from.Y === to.Y - 1;
-    }
-    exports.isMoveToBotLeft = isMoveToBotLeft;
-    function isAdvancingPlace(from, to) {
+    function isAdvancingPlace(from, to, board) {
         if (from === null || from.isEmpty() || from.equalsTo(to))
             return false;
-        if (from.piece.isQueen) {
-            return isMoveToTopRight(from, to) || isMoveToTopLeft(from, to) ||
-                isMoveToBotRight(from, to) || isMoveToBotLeft(from, to);
-        }
-        else if (from.piece.player.moveFoward) {
-            return isMoveToTopRight(from, to) || isMoveToTopLeft(from, to);
-        }
-        else {
-            return isMoveToBotRight(from, to) || isMoveToBotLeft(from, to);
-        }
+        var fromPoint = from.point;
+        var toPoint = to.point;
+        if (from.piece.isQueen)
+            return isAdvancingForQueens(fromPoint, toPoint, board);
+        if (from.piece.player.moveFoward)
+            return fromPoint.isTop(toPoint);
+        else
+            return fromPoint.isBot(toPoint);
     }
     exports.isAdvancingPlace = isAdvancingPlace;
+    function isAdvancingForQueens(from, to, board) {
+        try {
+            var i = void 0, point = void 0, place = void 0;
+            var path = from.getPathTo(to);
+            for (i = 0; i < path.length; i++) {
+                point = path[i];
+                place = board[point.x][point.y];
+                if (!place.isEmpty() && i !== path.length - 1)
+                    return false;
+            }
+            return true;
+        }
+        catch (ex) {
+            if (ex instanceof UnextractablePathException_2.default)
+                return false;
+        }
+    }
     function indentifyNextPlaceAfterEat(from, to, board) {
         var place;
         try {
-            place = getPlaceAfterEat(from, to, board);
+            place = getPlaceAfterEat(from.point, to.point, board);
         }
         catch (ex) {
             if (ex instanceof TypeError) {
                 place = undefined;
+            }
+            else {
+                throw ex;
             }
         }
         if (place === undefined || !place.isEmpty()) {
@@ -393,31 +507,27 @@ define("Actions/helpers", ["require", "exports", "Exceptions/InvalidPlayExceptio
     }
     exports.indentifyNextPlaceAfterEat = indentifyNextPlaceAfterEat;
     function getPlaceAfterEat(from, to, board) {
-        var place;
-        if (isMoveToTopRight(from, to)) {
-            place = board[to.X + 1][to.Y - 1];
-        }
-        else if (isMoveToTopLeft(from, to)) {
-            place = board[to.X + 1][to.Y + 1];
-        }
-        else if (isMoveToBotRight(from, to)) {
-            place = board[to.X - 1][to.Y - 1];
-        }
-        else {
-            place = board[to.X - 1][to.Y + 1];
-        }
-        return place;
+        if (from.isLongDiagonTopRight(to))
+            return board[to.x - 1][to.y + 1];
+        if (from.isLongDiagonTopLeft(to))
+            return board[to.x - 1][to.y - 1];
+        if (from.isLongDiagonBotRight(to))
+            return board[to.x + 1][to.y + 1];
+        if (from.isLongDiagonBotLeft(to))
+            return board[to.x + 1][to.y - 1];
+        throw new InvalidPlayException_3.default("Place doesn't exists");
     }
 });
 define("Actions/AdvanceAction", ["require", "exports", "Models/PlayResponse", "Actions/helpers"], function (require, exports, PlayResponse_1, helpers_1) {
     "use strict";
     var AdvanceAction = (function () {
-        function AdvanceAction(from, to) {
+        function AdvanceAction(from, to, board) {
             this.from = from;
             this.to = to;
+            this.board = board;
         }
         AdvanceAction.prototype.canPerform = function () {
-            return helpers_1.isAdvancingPlace(this.from, this.to);
+            return helpers_1.isAdvancingPlace(this.from, this.to, this.board);
         };
         AdvanceAction.prototype.perform = function () {
             var _a = this, from = _a.from, to = _a.to;
@@ -433,7 +543,7 @@ define("Actions/AdvanceAction", ["require", "exports", "Models/PlayResponse", "A
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = AdvanceAction;
 });
-define("Actions/ComboPlayAction", ["require", "exports", "Models/PlayResponse", "Exceptions/InvalidPlayException", "Actions/helpers"], function (require, exports, PlayResponse_2, InvalidPlayException_4, helpers_2) {
+define("Actions/ComboPlayAction", ["require", "exports", "Models/Point", "Models/PlayResponse", "Exceptions/InvalidPlayException", "Actions/helpers"], function (require, exports, Point_2, PlayResponse_2, InvalidPlayException_4, helpers_2) {
     "use strict";
     var ComboPlayAction = (function () {
         function ComboPlayAction(to, board, isAfterEat) {
@@ -469,16 +579,18 @@ define("Actions/ComboPlayAction", ["require", "exports", "Models/PlayResponse", 
             return this.claimComboForForwarder() || this.claimComboForBackwarder();
         };
         ComboPlayAction.prototype.claimComboForForwarder = function () {
-            var _a = this.to, X = _a.X, Y = _a.Y;
-            return this.canEatAt(X + 1, Y - 1) || this.canEatAt(X + 1, Y + 1);
+            var _a = this.to.point, x = _a.x, y = _a.y;
+            return this.canEatAt(new Point_2.default(x + 1, y - 1)) ||
+                this.canEatAt(new Point_2.default(x + 1, y + 1));
         };
         ComboPlayAction.prototype.claimComboForBackwarder = function () {
-            var _a = this.to, X = _a.X, Y = _a.Y;
-            return this.canEatAt(X - 1, Y + 1) || this.canEatAt(X - 1, Y - 1);
+            var _a = this.to.point, x = _a.x, y = _a.y;
+            return this.canEatAt(new Point_2.default(x - 1, y + 1))
+                || this.canEatAt(new Point_2.default(x - 1, y - 1));
         };
-        ComboPlayAction.prototype.canEatAt = function (x, y) {
+        ComboPlayAction.prototype.canEatAt = function (point) {
             try {
-                return this.eatAt(x, y);
+                return this.eatAt(point);
             }
             catch (ex) {
                 if (ex instanceof InvalidPlayException_4.default || ex instanceof TypeError) {
@@ -486,9 +598,9 @@ define("Actions/ComboPlayAction", ["require", "exports", "Models/PlayResponse", 
                 }
             }
         };
-        ComboPlayAction.prototype.eatAt = function (x, y) {
+        ComboPlayAction.prototype.eatAt = function (point) {
             var intendedNextPlace, placeAfterEat;
-            intendedNextPlace = this.board[x][y];
+            intendedNextPlace = this.board[point.x][point.y];
             placeAfterEat = helpers_2.indentifyNextPlaceAfterEat(this.to, intendedNextPlace, this.board);
             return !intendedNextPlace.isEmpty() &&
                 helpers_2.isEatingAnEnemyPiece(this.to, intendedNextPlace);
@@ -515,8 +627,8 @@ define("Actions/CrownQueenAction", ["require", "exports", "consts", "Models/Play
                 return false;
             var piece = to.piece;
             var player = piece.player;
-            return (player.moveFoward && piece.X === consts_1.BOARD_HEIGHT - 1) ||
-                (!player.moveFoward && piece.X === 0);
+            return (player.moveFoward && piece.point.x === consts_1.BOARD_HEIGHT - 1) ||
+                (!player.moveFoward && piece.point.x === 0);
         };
         CrownQueenAction.prototype.doesntNeedSeeCoordinate = function () {
             var to = this.to;
@@ -541,8 +653,8 @@ define("Actions/EatAction", ["require", "exports", "Models/PlayResponse", "Excep
             this.board = board;
         }
         EatAction.prototype.canPerform = function () {
-            var _a = this, from = _a.from, to = _a.to;
-            return helpers_3.isEating(from, to) && helpers_3.isAdvancingPlace(from, to);
+            var _a = this, from = _a.from, to = _a.to, board = _a.board;
+            return helpers_3.isEating(from, to) && helpers_3.isAdvancingPlace(from, to, board);
         };
         EatAction.prototype.perform = function () {
             var placeToEat;
@@ -680,7 +792,7 @@ define("Actions/PlayAction", ["require", "exports", "Actions/EatAction", "Action
         });
         Object.defineProperty(PlayAction.prototype, "isAdvancingPlace", {
             get: function () {
-                return helpers_4.isAdvancingPlace(this.from, this.to);
+                return helpers_4.isAdvancingPlace(this.from, this.to, this.board);
             },
             enumerable: true,
             configurable: true
@@ -723,7 +835,7 @@ define("Actions/PlayAction", ["require", "exports", "Actions/EatAction", "Action
                 new SelectAction_1.default(from, to),
                 new UnselectAction_1.default(from, to, lastPlay),
                 this.getEatAction(),
-                new AdvanceAction_1.default(from, to),
+                new AdvanceAction_1.default(from, to, this.board),
             ];
         };
         PlayAction.prototype.getEatAction = function () {
@@ -773,9 +885,9 @@ define("Models/Mediator", ["require", "exports", "Actions/PlayAction", "Models/P
             this._currentPlayer = pl1;
             this.player1 = pl1;
             this.player2 = pl2;
+            this.plays = [];
             this.createDOMElement();
             this.formatScoreElement();
-            this.plays = [];
             this.setCurrentPlayerClass();
         }
         Object.defineProperty(Mediator.prototype, "element", {
@@ -859,7 +971,7 @@ define("Models/Mediator", ["require", "exports", "Actions/PlayAction", "Models/P
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Mediator;
 });
-define("Models/Board", ["require", "exports", "Models/Place", "Models/Mediator", "Models/PlayStatus", "consts"], function (require, exports, Place_1, Mediator_1, PlayStatus_3, consts_2) {
+define("Models/Board", ["require", "exports", "Models/Place", "Models/Point", "Models/Mediator", "Models/PlayStatus", "consts"], function (require, exports, Place_1, Point_3, Mediator_1, PlayStatus_3, consts_2) {
     "use strict";
     var Board = (function () {
         function Board(renderSelector, pl1, pl2) {
@@ -911,8 +1023,7 @@ define("Models/Board", ["require", "exports", "Models/Place", "Models/Mediator",
         };
         Board.prototype.createPlace = function (x, y, playable) {
             var place = new Place_1.default(playable);
-            place.X = x;
-            place.Y = y;
+            place.point = new Point_3.default(x, y);
             this.boardMask[x][y] = place;
             place.element.addEventListener('click', this.play.bind(this, place));
             return place;

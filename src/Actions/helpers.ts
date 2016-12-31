@@ -1,5 +1,7 @@
 import Place from '../Models/Place'
+import Point from '../Models/Point'
 import InvalidPlayException from '../Exceptions/InvalidPlayException'
+import UnextractablePathException from '../Exceptions/UnextractablePathException'
 
 /**
  * @function
@@ -30,59 +32,55 @@ export function isEatingAnEnemyPiece (from : Place, to : Place) : boolean {
 /**
  * @function
  */
-export function isMoveToTopRight (from : Place, to : Place) : boolean {
-  return from.X === to.X - 1 && from.Y === to.Y + 1
-}
-
-/**
- * @function
- */
-export function isMoveToTopLeft (from : Place, to : Place) : boolean {
-  return from.X === to.X - 1 && from.Y === to.Y - 1
-}
-
-/**
- * @function
- */
-export function isMoveToBotRight (from : Place, to : Place) : boolean {
-  return from.X === to.X + 1 && from.Y === to.Y + 1
-}
-
-/**
- * @function
- */
-export function isMoveToBotLeft (from : Place, to : Place) : boolean {
-  return from.X === to.X + 1 && from.Y === to.Y - 1
-}
-
-/**
- * @function
- */
-export function isAdvancingPlace (from : Place, to : Place) : boolean {
+export function isAdvancingPlace (from : Place,
+                                    to : Place,
+                                    board : Place[][]) : boolean {
   if (from === null || from.isEmpty() || from.equalsTo(to)) return false
 
-  if (from.piece.isQueen) {
-    return isMoveToTopRight(from, to) || isMoveToTopLeft(from , to) ||
-      isMoveToBotRight(from, to) || isMoveToBotLeft(from, to)
-  } else if (from.piece.player.moveFoward) {
-    return isMoveToTopRight(from, to) || isMoveToTopLeft(from , to)
-  } else {
-      return isMoveToBotRight(from, to) || isMoveToBotLeft(from, to)
-  }
+  let fromPoint = from.point
+  let toPoint = to.point
+
+  if (from.piece.isQueen) return isAdvancingForQueens(fromPoint, toPoint, board)
+  if (from.piece.player.moveFoward) return fromPoint.isTop(toPoint)
+  else return fromPoint.isBot(toPoint)
 }
 
 /**
  * @function
  */
-export function indentifyNextPlaceAfterEat (from : Place, to : Place,
-                                    board : Place[][]) : Place {
-  let place
-
+ function isAdvancingForQueens (from : Point,
+                                      to : Point,
+                                      board : Place[][]) : boolean {
   try {
-    place = getPlaceAfterEat(from, to, board)
+    let i, point, place
+    let path = from.getPathTo(to)
+
+    for(i = 0; i < path.length; i++) {
+      point = path[i]
+      place = board[point.x][point.y]
+      if(!place.isEmpty() && i !== path.length - 1) return false
+    }
+
+    return true
+  } catch (ex) {
+    if (ex instanceof UnextractablePathException) return false
+  }
+ }
+
+/**
+ * @function
+ */
+export function indentifyNextPlaceAfterEat (from : Place,
+                                            to : Place,
+                                            board : Place[][]) : Place {
+  let place
+  try {
+    place = getPlaceAfterEat(from.point, to.point, board)
   } catch (ex) {
     if (ex instanceof TypeError) {
       place = undefined
+    } else {
+      throw ex
     }
   }
 
@@ -93,16 +91,12 @@ export function indentifyNextPlaceAfterEat (from : Place, to : Place,
   return place
  }
 
-function getPlaceAfterEat (from : Place, to : Place, board : Place[][]) : Place {
-  let place
-  if (isMoveToTopRight(from, to)) {
-    place = board[to.X + 1][to.Y - 1]
-  } else if (isMoveToTopLeft(from, to)) {
-    place = board[to.X + 1][to.Y + 1]
-  } else if (isMoveToBotRight(from, to)) {
-    place = board[to.X - 1][to.Y - 1]
-  } else {
-    place = board[to.X - 1][to.Y + 1]
-  }
-  return place
+function getPlaceAfterEat (from : Point,
+                            to : Point,
+                            board : Place[][]) : Place {
+  if (from.isLongDiagonTopRight(to)) return board[to.x - 1][to.y + 1]
+  if (from.isLongDiagonTopLeft(to)) return board[to.x - 1][to.y - 1]
+  if (from.isLongDiagonBotRight(to)) return board[to.x + 1][to.y + 1]
+  if (from.isLongDiagonBotLeft(to)) return board[to.x + 1][to.y - 1]
+  throw new InvalidPlayException("Place doesn't exists")
 }

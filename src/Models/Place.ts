@@ -1,4 +1,5 @@
 import Piece from './Piece'
+import Point from './Point'
 import InvalidPlayException from '../Exceptions/InvalidPlayException'
 import NonEmptyPlaceException from '../Exceptions/NonEmptyPlaceException'
 
@@ -7,8 +8,7 @@ const DARK_PLACE = '#AAA'
 
 export default class Place {
 
-  public X : number
-  public Y : number
+  public point : Point
   private _piece : Piece = null
   private playable : boolean
   private _selected : boolean = false
@@ -17,6 +17,7 @@ export default class Place {
 
   constructor (playable : boolean) {
     this.playable = playable
+    this.point = new Point(0, 0)
     this.createDOMElement()
   }
 
@@ -43,11 +44,8 @@ export default class Place {
 
   set piece (piece : Piece) {
     if (piece !== null) {
-      if (!this.playable)  throw new InvalidPlayException('Place not playable')
-      if (!this.isEmpty()) throw new NonEmptyPlaceException(this)
-
-      piece.X = this.X
-      piece.Y = this.Y
+      this.checkSetPiece()
+      piece.point = this.point
     }
 
     this._piece = piece
@@ -59,6 +57,11 @@ export default class Place {
   }
 
   /* Methods */
+
+  private checkSetPiece () : void {
+    if (!this.playable)  throw new InvalidPlayException('Place not playable')
+    if (!this.isEmpty()) throw new NonEmptyPlaceException(this)
+  }
 
   private  createDOMElement () : void {
     this.td = document.createElement('td')
@@ -81,11 +84,9 @@ export default class Place {
     return this.playable
   }
 
-  public equalsTo(place : Place) : boolean {
+  public equalsTo (place : Place) : boolean {
     if (place === null) return false
-
-    return this.X ===  place.X &&
-            this.Y ===  place.Y
+    return this.point.equalsTo(place.point)
   }
 
 }

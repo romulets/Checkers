@@ -1,5 +1,6 @@
 import Place from './Place'
 import Player from './Player'
+import Point from './Point'
 import Mediator from './Mediator'
 import PlayAction from '../Actions/PlayAction'
 import { PlayStatus } from './PlayStatus'
@@ -23,7 +24,7 @@ export default class Board {
 
   /* Methods */
 
-  private setupMediator(pl1 : Player, pl2 : Player) {
+  private setupMediator (pl1 : Player, pl2 : Player) : void {
     this.mediator = new Mediator(pl1, pl2)
   }
 
@@ -74,8 +75,7 @@ export default class Board {
 
   private createPlace (x : number, y : number, playable : boolean) : Place {
     let place = new Place(playable)
-    place.X = x
-    place.Y = y
+    place.point = new Point(x, y)
     this.boardMask[x][y] = place
     place.element.addEventListener('click', this.play.bind(this, place))
     return place
