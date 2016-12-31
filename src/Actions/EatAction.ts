@@ -26,8 +26,8 @@ export default class EatAction implements Action {
   /* Methods */
 
   public canPerform () : boolean  {
-    let  { from, to } = this
-    return isEating(from, to) && isAdvancingPlace(from, to)
+    let  { from, to, board } = this
+    return isEating(from, to) && isAdvancingPlace(from, to, board)
   }
 
   public perform () : PlayResponse {
@@ -39,7 +39,7 @@ export default class EatAction implements Action {
     } catch (ex) {
       if (ex instanceof InvalidPlayException) return PlayResponse.invalid()
     }
-    
+
     if (this.eat(placeToEat))  {
       return PlayResponse.finished()
     } else {

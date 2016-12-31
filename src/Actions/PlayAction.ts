@@ -57,7 +57,7 @@ export default class PlayAction implements Action {
   }
 
   get isAdvancingPlace () : boolean {
-    return isAdvancingPlace(this.from, this.to)
+    return isAdvancingPlace(this.from, this.to, this.board)
   }
 
   get isComboPlay () : boolean {
@@ -97,7 +97,7 @@ export default class PlayAction implements Action {
       new SelectAction(from, to),
       new UnselectAction(from, to, lastPlay),
       this.getEatAction(),
-      new AdvanceAction(from, to),
+      new AdvanceAction(from, to, this.board),
     ]
   }
 

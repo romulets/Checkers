@@ -1,6 +1,7 @@
 import Place from '../Models/Place'
 import Point from '../Models/Point'
 import InvalidPlayException from '../Exceptions/InvalidPlayException'
+import UnextractablePathException from '../Exceptions/UnextractablePathException'
 
 /**
  * @function
@@ -31,16 +32,40 @@ export function isEatingAnEnemyPiece (from : Place, to : Place) : boolean {
 /**
  * @function
  */
-export function isAdvancingPlace (from : Place, to : Place) : boolean {
+export function isAdvancingPlace (from : Place,
+                                    to : Place,
+                                    board : Place[][]) : boolean {
   if (from === null || from.isEmpty() || from.equalsTo(to)) return false
 
   let fromPoint = from.point
   let toPoint = to.point
 
-  if (from.piece.isQueen) return fromPoint.isLongDiagon(toPoint)
+  if (from.piece.isQueen) return isAdvancingForQueens(fromPoint, toPoint, board)
   if (from.piece.player.moveFoward) return fromPoint.isTop(toPoint)
   else return fromPoint.isBot(toPoint)
 }
+
+/**
+ * @function
+ */
+ function isAdvancingForQueens (from : Point,
+                                      to : Point,
+                                      board : Place[][]) : boolean {
+  try {
+    let i, point, place
+    let path = from.getPathTo(to)
+
+    for(i = 0; i < path.length; i++) {
+      point = path[i]
+      place = board[point.x][point.y]
+      if(!place.isEmpty() && i !== path.length - 1) return false
+    }
+
+    return true
+  } catch (ex) {
+    if (ex instanceof UnextractablePathException) return false
+  }
+ }
 
 /**
  * @function
@@ -54,6 +79,8 @@ export function indentifyNextPlaceAfterEat (from : Place,
   } catch (ex) {
     if (ex instanceof TypeError) {
       place = undefined
+    } else {
+      throw ex
     }
   }
 
@@ -67,8 +94,9 @@ export function indentifyNextPlaceAfterEat (from : Place,
 function getPlaceAfterEat (from : Point,
                             to : Point,
                             board : Place[][]) : Place {
-  if (from.isTopRight(to)) return board[to.x + 1][to.y - 1]
-  if (from.isTopLeft(to)) return board[to.x + 1][to.y + 1]
-  if (from.isBotRight(to)) return board[to.x - 1][to.y - 1]
-  else return board[to.x - 1][to.y + 1]
+  if (from.isLongDiagonTopRight(to)) return board[to.x - 1][to.y + 1]
+  if (from.isLongDiagonTopLeft(to)) return board[to.x - 1][to.y - 1]
+  if (from.isLongDiagonBotRight(to)) return board[to.x + 1][to.y + 1]
+  if (from.isLongDiagonBotLeft(to)) return board[to.x + 1][to.y - 1]
+  throw new InvalidPlayException("Place doesn't exists")
 }
