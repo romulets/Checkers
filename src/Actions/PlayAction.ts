@@ -8,7 +8,7 @@ import AdvanceAction from './AdvanceAction'
 import UnselectAction from './UnselectAction'
 import ComboPlayAction from './ComboPlayAction'
 import CrownQueenAction from './CrownQueenAction'
-import { isEatingAFriendPiece, isAdvancingPlace } from './helpers'
+import { isEatingAFriendPiece, isAdvancingPlace } from '../utils'
 
 export default class PlayAction implements Action {
 

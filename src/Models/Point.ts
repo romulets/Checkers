@@ -60,36 +60,36 @@ export default class Point {
   }
 
   public isLongDiagonTopRight (other : Point) : boolean {
-    let comparisson = point => point.x >= other.x && point.y <= other.y
+    let isLimitValid = point => point.x >= other.x && point.y <= other.y
     let walk = toWalk => new Point(toWalk.x - 1, toWalk.y + 1)
-    return this.isLongDiagonGeneric(other, comparisson, walk)
+    return this.isLongDiagonGeneric(other, isLimitValid, walk)
   }
 
   public isLongDiagonTopLeft (other : Point) : boolean {
-    let comparisson = point => point.x >= other.x && point.y >= other.y
+    let isLimitValid = point => point.x >= other.x && point.y >= other.y
     let walk = toWalk => new Point(toWalk.x - 1, toWalk.y - 1)
-    return this.isLongDiagonGeneric(other, comparisson, walk)
+    return this.isLongDiagonGeneric(other, isLimitValid, walk)
   }
 
   public isLongDiagonBotRight (other : Point) : boolean {
-    let comparisson = point => point.x <= other.x && point.y <= other.y
+    let isLimitValid = point => point.x <= other.x && point.y <= other.y
     let walk = toWalk => new Point(toWalk.x + 1, toWalk.y + 1)
-    return this.isLongDiagonGeneric(other, comparisson, walk)
+    return this.isLongDiagonGeneric(other, isLimitValid, walk)
   }
 
   public isLongDiagonBotLeft (other : Point) : boolean {
-    let comparisson = toCompare => toCompare.x <= other.x && toCompare.y >= other.y
+    let isLimitValid = point => point.x <= other.x && point.y >= other.y
     let walk = toWalk => new Point(toWalk.x + 1, toWalk.y - 1)
-    return this.isLongDiagonGeneric(other, comparisson, walk)
+    return this.isLongDiagonGeneric(other, isLimitValid, walk)
   }
 
   private isLongDiagonGeneric (other : Point,
-                                comparisson : (other : Point) => boolean,
+                                isLimitValid : (other : Point) => boolean,
                                 walk : (point : Point) => Point) : boolean {
 
       let floatPoint = new Point(this.x, this.y)
       this.walkedPath = []
-      while(comparisson(floatPoint)) {
+      while(isLimitValid(floatPoint)) {
           floatPoint = walk(floatPoint)
           this.walkedPath.push(floatPoint)
           if (floatPoint.x == other.x && floatPoint.y == other.y) return true

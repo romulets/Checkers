@@ -3,7 +3,7 @@ import Player from './Player'
 import PlayAction from '../Actions/PlayAction'
 import PlayResponse from './PlayResponse'
 import { PlayStatus } from './PlayStatus'
-import { isEatingAnEnemyPiece, isAdvancingPlace } from '../Actions/helpers'
+import { isEatingAnEnemyPiece, isAdvancingPlace } from '../utils'
 
 export default class Mediator {
 
@@ -63,6 +63,7 @@ export default class Mediator {
     }
 
     this.plays.push(play)
+    this.determineWinner(play.board)
     return playResponse
   }
 
@@ -93,7 +94,6 @@ export default class Mediator {
   private unsetPlayersClass () : void {
     this.player1.element.classList.remove('playing')
     this.player2.element.classList.remove('playing')
-
   }
 
   private createDOMElement () : void {
@@ -106,6 +106,37 @@ export default class Mediator {
   private formatScoreElement () : void {
     this.player1.updateElementInfos()
     this.player2.updateElementInfos()
+  }
+
+  private determineWinner (board : Place[][]) {
+    let winner = this.getWinner(board)
+    if (winner !== null) {
+      this.unsetPlayersClass()
+      winner.element.classList.add('winner')
+    }
+  }
+
+  private getWinner (board : Place[][]) : Player {
+    let { player1, player2 } = this
+    if (!this.hasMoves(player2, board)) return player1
+    if (!this.hasMoves(player1, board)) return player2
+    return null
+  }
+
+  private hasMoves (player : Player, board : Place[][]) : boolean {
+    let pieces = player.piecesInGame
+    if (pieces.length > 3) return true
+    if (pieces.length === 0) return false
+
+    let hasChances = false
+    pieces.forEach(p => {
+      if (p.hasPlaceToGo(board)) {
+         hasChances = true
+      }
+    })
+
+    console.log(hasChances)
+    return hasChances
   }
 
 }

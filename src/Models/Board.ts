@@ -12,8 +12,6 @@ export default class Board {
   private table : HTMLElement
   private boardMask: Place[][]
   private selectedPlace : Place
-  private player1 : Player
-  private player2 : Player
 
   public constructor (renderSelector : string, pl1 : Player, pl2 : Player) {
       this.setupMediator(pl1, pl2)
@@ -97,5 +95,4 @@ export default class Board {
     rootElement.appendChild(this.table)
     rootElement.appendChild(this.mediator.element)
   }
-
 }

@@ -1,7 +1,7 @@
-import Place from '../Models/Place'
-import Point from '../Models/Point'
-import InvalidPlayException from '../Exceptions/InvalidPlayException'
-import UnextractablePathException from '../Exceptions/UnextractablePathException'
+import Place from './Models/Place'
+import Point from './Models/Point'
+import InvalidPlayException from './Exceptions/InvalidPlayException'
+import UnextractablePathException from './Exceptions/UnextractablePathException'
 
 /**
  * @function
@@ -73,22 +73,22 @@ export function isAdvancingPlace (from : Place,
 export function indentifyNextPlaceAfterEat (from : Place,
                                             to : Place,
                                             board : Place[][]) : Place {
-  let place
+  let placeAfterEat
   try {
-    place = getPlaceAfterEat(from.point, to.point, board)
+    placeAfterEat = getPlaceAfterEat(from.point, to.point, board)
   } catch (ex) {
     if (ex instanceof TypeError) {
-      place = undefined
+      placeAfterEat = undefined
     } else {
       throw ex
     }
   }
 
-  if(place === undefined || !place.isEmpty()) {
-    throw new InvalidPlayException("Place doesn't exists")
+  if(placeAfterEat === undefined || !placeAfterEat.isEmpty()) {
+    throw new InvalidPlayException("Invalid place")
   }
 
-  return place
+  return placeAfterEat
  }
 
 function getPlaceAfterEat (from : Point,

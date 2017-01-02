@@ -7,7 +7,7 @@ import {
         indentifyNextPlaceAfterEat,
         isEatingAnEnemyPiece,
         isEating
-      } from './helpers'
+      } from '../utils'
 
 export default class ComboPlayAction implements Action {
 

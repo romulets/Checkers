@@ -1,7 +1,7 @@
 import Place from '../Models/Place'
 import { Action } from './Action'
 import PlayResponse from '../Models/PlayResponse'
-import { isAdvancingPlace } from './helpers'
+import { isAdvancingPlace } from '../utils'
 
 export default class AdvanceAction implements Action {
 

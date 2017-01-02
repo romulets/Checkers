@@ -7,7 +7,7 @@ import {
           isEating,
           isAdvancingPlace,
           indentifyNextPlaceAfterEat
-        } from './helpers'
+        } from '../utils'
 
 export default class EatAction implements Action {
 

@@ -43,6 +43,18 @@
   font-size: 12px;
 }
 
+.checkers-player.winner {
+  border: 2px solid #00F
+}
+
+.checkers-player.winner:after {
+  content: 'YOU WIN';
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  font-size: 12px;
+}
+
 .checkers-board td{
   width: 70px;
   height: 70px;
